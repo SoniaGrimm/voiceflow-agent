@@ -11,6 +11,33 @@
             height: 100vh;
             overflow: hidden;
         }
+        
+        /* Masquer "Voiceflow Assistant" et personnaliser */
+        .vfrc-launcher {
+            display: none !important;
+        }
+        
+        /* Attendre que le widget soit chargé puis appliquer les styles */
+        .vf-assistant-wrapper [class*="AssistantInfo"],
+        .vf-assistant-wrapper [class*="assistant-info"],
+        div[class*="AssistantInfo"] {
+            display: none !important;
+        }
+        
+        /* Masquer le titre Voiceflow Assistant */
+        h1:has-text("Voiceflow Assistant"),
+        [class*="title"]:has-text("Voiceflow Assistant"),
+        .vfrc-assistant-info__title {
+            visibility: hidden !important;
+            position: relative !important;
+        }
+        
+        .vfrc-assistant-info__title::after {
+            content: "TAO" !important;
+            visibility: visible !important;
+            position: absolute !important;
+            left: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -31,12 +58,31 @@
                 
                 setTimeout(function() {
                     window.voiceflow.chat.open();
+                    
+                    // Injecter du CSS après ouverture pour forcer les changements
                     setTimeout(function() {
+                        const style = document.createElement('style');
+                        style.textContent = `
+                            /* Masquer le titre et logo Voiceflow */
+                            [class*="AssistantInfo"] { display: none !important; }
+                            [class*="assistant-title"] { display: none !important; }
+                            .vfrc-chat [class*="title"]:contains("Voiceflow") { display: none !important; }
+                            
+                            /* Masquer "Powered by Voiceflow" */
+                            [class*="watermark"], 
+                            [class*="Watermark"],
+                            .vfrc-watermark { 
+                                display: none !important; 
+                            }
+                        `;
+                        document.head.appendChild(style);
+                        
+                        // Envoyer l'agent code
                         window.voiceflow.chat.interact({
                             type: 'text',
                             payload: agentCode
                         });
-                    }, 2000);
+                    }, 1000);
                 }, 3000);
             };
             document.head.appendChild(v);
