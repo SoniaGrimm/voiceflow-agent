@@ -20,41 +20,33 @@
         
         console.log('Agent reçu:', agentCode);
         
+        // Générer un ID unique pour forcer une nouvelle session
+        const sessionId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
         (function(d, t) {
             var v = d.createElement(t);
             v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
             v.type = "text/javascript";
             v.onload = function() {
-                // Forcer les paramètres d'apparence directement
-                const assistant = {
-                    title: "TAO",
-                    name: "TAO",
-                    image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg",
-                    color: "#8B42A2",
-                    description: "Bienvenue !",
-                    stylesheet: JSON.stringify({
-                        ".vfrc-header": {
-                            "background": "#8B42A2"
-                        },
-                        ".vfrc-assistant-title": {
-                            "display": "none"
-                        },
-                        ".vfrc-assistant-title::after": {
-                            "content": "'TAO'",
-                            "display": "block"
-                        }
-                    })
-                };
+                // Nettoyer toute session précédente
+                if (window.voiceflow && window.voiceflow.chat && window.voiceflow.chat.destroy) {
+                    window.voiceflow.chat.destroy();
+                }
                 
+                // Charger avec un nouveau userID pour forcer un reset
                 window.voiceflow.chat.load({
                     verify: { projectID: '68a6e2cc67f49328386b3766' },
                     url: 'https://general-runtime.voiceflow.com',
                     versionID: 'production',
-                    assistant: assistant
+                    userID: sessionId,  // Force une nouvelle session
+                    autostart: false    // Ne pas démarrer automatiquement
                 });
                 
                 setTimeout(function() {
                     window.voiceflow.chat.open();
+                    // Forcer un reset avant d'envoyer le code
+                    window.voiceflow.chat.reset();
+                    
                     setTimeout(function() {
                         window.voiceflow.chat.interact({
                             type: 'text',
