@@ -35,3 +35,18 @@
                 setTimeout(function() {
                     window.voiceflow.chat.open();
                     setTimeout(function() {
+                        window.voiceflow.chat.interact({
+                            type: 'text',
+                            payload: agentCode
+                        });
+                        document.body.innerHTML = '';
+                    }, 2000);
+                }, 3000);
+            };
+            v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs";
+            v.type = "text/javascript";
+            s.parentNode.insertBefore(v, s);
+        })(document, 'script');
+    </script>
+</body>
+</html>
