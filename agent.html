@@ -15,45 +15,65 @@
 </head>
 <body>
     <script type="text/javascript">
+        // Effacer TOUTES les données Voiceflow stockées
+        try {
+            // Effacer le localStorage pour Voiceflow
+            Object.keys(localStorage).forEach(key => {
+                if (key.includes('voiceflow') || key.includes('vf')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            // Effacer le sessionStorage aussi
+            Object.keys(sessionStorage).forEach(key => {
+                if (key.includes('voiceflow') || key.includes('vf')) {
+                    sessionStorage.removeItem(key);
+                }
+            });
+        } catch(e) {
+            console.log('Erreur lors du nettoyage:', e);
+        }
+        
         const urlParams = new URLSearchParams(window.location.search);
         const agentCode = urlParams.get('agent') || '1';
         
         console.log('Agent reçu:', agentCode);
         
-        // Générer un ID unique pour forcer une nouvelle session
-        const sessionId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        // Timestamp unique pour forcer une nouvelle session
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(7);
         
         (function(d, t) {
             var v = d.createElement(t);
-            v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
+            v.src = "https://cdn.voiceflow.com/widget/bundle.mjs?t=" + timestamp; // Forcer le rechargement
             v.type = "text/javascript";
             v.onload = function() {
-                // Nettoyer toute session précédente
-                if (window.voiceflow && window.voiceflow.chat && window.voiceflow.chat.destroy) {
-                    window.voiceflow.chat.destroy();
-                }
-                
-                // Charger avec un nouveau userID pour forcer un reset
                 window.voiceflow.chat.load({
                     verify: { projectID: '68a6e2cc67f49328386b3766' },
                     url: 'https://general-runtime.voiceflow.com',
                     versionID: 'production',
-                    userID: sessionId,  // Force une nouvelle session
-                    autostart: false    // Ne pas démarrer automatiquement
+                    userID: 'user_' + agentCode + '_' + timestamp + '_' + randomId,
+                    session: {
+                        userID: 'session_' + timestamp + '_' + randomId
+                    },
+                    launch: {
+                        restart: true  // Forcer le restart
+                    }
                 });
                 
                 setTimeout(function() {
-                    window.voiceflow.chat.open();
-                    // Forcer un reset avant d'envoyer le code
-                    window.voiceflow.chat.reset();
-                    
+                    // Fermer puis rouvrir pour forcer le reset
+                    window.voiceflow.chat.close();
                     setTimeout(function() {
-                        window.voiceflow.chat.interact({
-                            type: 'text',
-                            payload: agentCode
-                        });
-                    }, 2000);
-                }, 3000);
+                        window.voiceflow.chat.open();
+                        setTimeout(function() {
+                            window.voiceflow.chat.interact({
+                                type: 'text',
+                                payload: agentCode
+                            });
+                        }, 2000);
+                    }, 500);
+                }, 2000);
             };
             document.head.appendChild(v);
         })(document, 'script');
