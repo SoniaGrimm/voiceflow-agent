@@ -18,55 +18,21 @@
         const urlParams = new URLSearchParams(window.location.search);
         const agentCode = urlParams.get('agent') || '1';
         
+        console.log('Agent reçu:', agentCode);
+        
         (function(d, t) {
             var v = d.createElement(t);
             v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
             v.type = "text/javascript";
             v.onload = function() {
-                // Configuration avec personnalisation visuelle
                 window.voiceflow.chat.load({
                     verify: { projectID: '68a6e2cc67f49328386b3766' },
                     url: 'https://general-runtime.voiceflow.com',
-                    versionID: 'production',
-                    render: {
-                        mode: 'embedded'
-                    },
-                    appearance: {
-                        primaryColor: '#8B42A2',
-                        backgroundColor: '#FFFFFF',
-                        textColor: '#000000',
-                        headerColor: '#8B42A2',
-                        assistantName: 'TAO',
-                        assistantImage: 'https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg',
-                        watermark: false
-                    },
-                    launch: {
-                        disableWatermark: true
-                    }
+                    versionID: 'production'
                 });
                 
-                // Injecter des styles supplémentaires après chargement
                 setTimeout(function() {
-                    const style = document.createElement('style');
-                    style.innerHTML = `
-                        .vfrc-header { background: #8B42A2 !important; }
-                        .vfrc-launcher { background: #8B42A2 !important; }
-                        .vfrc-button { background: #8B42A2 !important; }
-                        .vfrc-user-response { background: #8B42A2 !important; }
-                        [class*="watermark"] { display: none !important; }
-                        [class*="Watermark"] { display: none !important; }
-                        [class*="assistant"][class*="title"]:not(:empty) {
-                            font-size: 0 !important;
-                        }
-                        [class*="assistant"][class*="title"]:not(:empty):after {
-                            content: 'TAO';
-                            font-size: 1.5rem;
-                        }
-                    `;
-                    document.head.appendChild(style);
-                    
                     window.voiceflow.chat.open();
-                    
                     setTimeout(function() {
                         window.voiceflow.chat.interact({
                             type: 'text',
