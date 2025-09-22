@@ -1,92 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAO Agent</title>
+    <title>TAO</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ffb87d 0%, #a05487 100%);
             height: 100vh;
-            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        
-        /* Masquer "Voiceflow Assistant" et personnaliser */
-        .vfrc-launcher {
-            display: none !important;
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            height: 100vh;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
-        
-        /* Attendre que le widget soit chargé puis appliquer les styles */
-        .vf-assistant-wrapper [class*="AssistantInfo"],
-        .vf-assistant-wrapper [class*="assistant-info"],
-        div[class*="AssistantInfo"] {
-            display: none !important;
+        .chat-header {
+            background: #a05487;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        
-        /* Masquer le titre Voiceflow Assistant */
-        h1:has-text("Voiceflow Assistant"),
-        [class*="title"]:has-text("Voiceflow Assistant"),
-        .vfrc-assistant-info__title {
-            visibility: hidden !important;
-            position: relative !important;
+        .chat-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
         }
-        
-        .vfrc-assistant-info__title::after {
-            content: "TAO" !important;
-            visibility: visible !important;
-            position: absolute !important;
-            left: 0 !important;
+        .chat-header h1 {
+            font-size: 24px;
+        }
+        .chat-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <script type="text/javascript">
+    <div class="chat-container">
+        <div class="chat-header">
+            <img src="https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg" alt="TAO">
+            <h1>TAO</h1>
+        </div>
+        <iframe 
+            id="voiceflow-frame"
+            class="chat-frame"
+            src="">
+        </iframe>
+    </div>
+
+    <script>
+        // Récupérer le paramètre agent
         const urlParams = new URLSearchParams(window.location.search);
         const agentCode = urlParams.get('agent') || '1';
         
-        (function(d, t) {
-            var v = d.createElement(t);
-            v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
-            v.type = "text/javascript";
-            v.onload = function() {
-                window.voiceflow.chat.load({
-                    verify: { projectID: '68a6e2cc67f49328386b3766' },
-                    url: 'https://general-runtime.voiceflow.com',
-                    versionID: 'production'
-                });
-                
-                setTimeout(function() {
-                    window.voiceflow.chat.open();
-                    
-                    // Injecter du CSS après ouverture pour forcer les changements
-                    setTimeout(function() {
-                        const style = document.createElement('style');
-                        style.textContent = `
-                            /* Masquer le titre et logo Voiceflow */
-                            [class*="AssistantInfo"] { display: none !important; }
-                            [class*="assistant-title"] { display: none !important; }
-                            .vfrc-chat [class*="title"]:contains("Voiceflow") { display: none !important; }
-                            
-                            /* Masquer "Powered by Voiceflow" */
-                            [class*="watermark"], 
-                            [class*="Watermark"],
-                            .vfrc-watermark { 
-                                display: none !important; 
-                            }
-                        `;
-                        document.head.appendChild(style);
-                        
-                        // Envoyer l'agent code
-                        window.voiceflow.chat.interact({
-                            type: 'text',
-                            payload: agentCode
-                        });
-                    }, 1000);
-                }, 3000);
-            };
-            document.head.appendChild(v);
-        })(document, 'script');
+        // Charger agent.html dans l'iframe avec le bon paramètre
+        document.getElementById('voiceflow-frame').src = 
+            `agent.html?agent=${agentCode}`;
     </script>
 </body>
 </html>
