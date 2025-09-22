@@ -11,11 +11,6 @@
             height: 100vh;
             overflow: hidden;
         }
-        
-        /* Forcer les styles après chargement */
-        .vfrc-widget iframe {
-            --primary-color: #8B42A2 !important;
-        }
     </style>
 </head>
 <body>
@@ -41,7 +36,6 @@
             v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
             v.type = "text/javascript";
             v.onload = function() {
-                // Forcer les paramètres d'apparence ET le reset
                 const assistant = {
                     name: "TAO",
                     image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg",
@@ -59,19 +53,49 @@
                     }
                 });
                 
-                // Injecter des styles CSS supplémentaires
                 setTimeout(function() {
+                    // CSS plus agressif pour remplacer le texte
                     const style = document.createElement('style');
                     style.textContent = `
-                        [class*="Header"] { background: #8B42A2 !important; }
-                        [class*="assistant"][class*="name"] { display: none !important; }
-                        [class*="assistant"][class*="name"]::after { 
-                            content: 'TAO' !important; 
-                            display: inline !important;
+                        /* Masquer le titre Voiceflow Assistant */
+                        .vfrc-assistant-info__title,
+                        [class*="assistant-info__title"],
+                        [class*="AssistantInfo__title"],
+                        h1:contains("Voiceflow Assistant") {
+                            visibility: hidden !important;
+                            position: relative !important;
                         }
+                        
+                        /* Ajouter TAO à la place */
+                        .vfrc-assistant-info__title::after,
+                        [class*="assistant-info__title"]::after,
+                        [class*="AssistantInfo__title"]::after {
+                            content: "TAO" !important;
+                            visibility: visible !important;
+                            position: absolute !important;
+                            left: 0 !important;
+                            top: 0 !important;
+                        }
+                        
+                        /* Couleurs */
+                        [class*="Header"] { background: #8B42A2 !important; }
                         [class*="Watermark"] { display: none !important; }
                     `;
                     document.head.appendChild(style);
+                    
+                    // Script pour remplacer le texte après chargement
+                    const replaceText = setInterval(() => {
+                        const elements = document.querySelectorAll('*');
+                        elements.forEach(el => {
+                            if (el.textContent === 'Voiceflow Assistant' && el.children.length === 0) {
+                                el.textContent = 'TAO';
+                                clearInterval(replaceText);
+                            }
+                        });
+                    }, 100);
+                    
+                    // Arrêter après 10 secondes
+                    setTimeout(() => clearInterval(replaceText), 10000);
                     
                     window.voiceflow.chat.open();
                     
