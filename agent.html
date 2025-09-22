@@ -26,5 +26,21 @@
                 window.voiceflow.chat.load({
                     verify: { projectID: '68a6e2cc67f49328386b3766' },
                     url: 'https://general-runtime.voiceflow.com',
-                    versionID: 'production',
-                    rende
+                    versionID: 'production'
+                });
+                
+                setTimeout(function() {
+                    window.voiceflow.chat.open();
+                    setTimeout(function() {
+                        window.voiceflow.chat.interact({
+                            type: 'text',
+                            payload: agentCode
+                        });
+                    }, 2000);
+                }, 3000);
+            };
+            document.head.appendChild(v);
+        })(document, 'script');
+    </script>
+</body>
+</html>
