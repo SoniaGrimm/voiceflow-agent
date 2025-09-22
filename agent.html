@@ -27,23 +27,4 @@
                     verify: { projectID: '68a6e2cc67f49328386b3766' },
                     url: 'https://general-runtime.voiceflow.com',
                     versionID: 'production',
-                    config: {
-                        disableWatermark: true  // Supprime "Powered by Voiceflow"
-                    }
-                });
-                
-                setTimeout(function() {
-                    window.voiceflow.chat.open();
-                    setTimeout(function() {
-                        window.voiceflow.chat.interact({
-                            type: 'text',
-                            payload: agentCode
-                        });
-                    }, 2000);
-                }, 3000);
-            };
-            document.head.appendChild(v);
-        })(document, 'script');
-    </script>
-</body>
-</html>
+                    rende
