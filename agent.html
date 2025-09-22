@@ -25,12 +25,32 @@
             v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
             v.type = "text/javascript";
             v.onload = function() {
-                // PAS de paramètres d'apparence ici !
-                // Laissez Voiceflow utiliser vos réglages
+                // Forcer les paramètres d'apparence directement
+                const assistant = {
+                    title: "TAO",
+                    name: "TAO",
+                    image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg",
+                    color: "#8B42A2",
+                    description: "Bienvenue !",
+                    stylesheet: JSON.stringify({
+                        ".vfrc-header": {
+                            "background": "#8B42A2"
+                        },
+                        ".vfrc-assistant-title": {
+                            "display": "none"
+                        },
+                        ".vfrc-assistant-title::after": {
+                            "content": "'TAO'",
+                            "display": "block"
+                        }
+                    })
+                };
+                
                 window.voiceflow.chat.load({
                     verify: { projectID: '68a6e2cc67f49328386b3766' },
                     url: 'https://general-runtime.voiceflow.com',
-                    versionID: 'production'  // IMPORTANT: doit être 'production'
+                    versionID: 'production',
+                    assistant: assistant
                 });
                 
                 setTimeout(function() {
