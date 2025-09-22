@@ -1,12 +1,10 @@
 // voiceflow-agent.js
 function initVoiceflowWithAgent() {
-  // Lire le paramètre de l'URL
   const urlParams = new URLSearchParams(window.location.search);
   const agentCode = urlParams.get('agent') || '1';
   
-  console.log('Initialisation avec agent:', agentCode);
+  console.log('Agent détecté:', agentCode);
   
-  // Charger Voiceflow
   const script = document.createElement('script');
   script.src = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
   script.type = 'text/javascript';
@@ -20,7 +18,6 @@ function initVoiceflowWithAgent() {
       }
     });
     
-    // Attendre et envoyer le code
     setTimeout(() => {
       window.voiceflow.chat.open();
       setTimeout(() => {
@@ -34,7 +31,6 @@ function initVoiceflowWithAgent() {
   document.head.appendChild(script);
 }
 
-// Lancer au chargement
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initVoiceflowWithAgent);
 } else {
