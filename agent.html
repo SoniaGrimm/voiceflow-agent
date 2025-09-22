@@ -31,6 +31,43 @@
         const agentCode = urlParams.get('agent') || '1';
         const sessionId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
+        // Fonction pour remplacer le texte dans tout le DOM
+        function replaceVoiceflowText() {
+            // Observer pour détecter les changements
+            const observer = new MutationObserver(function(mutations) {
+                document.querySelectorAll('*').forEach(element => {
+                    if (element.childNodes.length === 1 && element.childNodes[0].nodeType === 3) {
+                        if (element.textContent.includes('Voiceflow Assistant')) {
+                            element.textContent = 'TAO';
+                        }
+                    }
+                });
+                
+                // Aussi essayer avec les iframes
+                document.querySelectorAll('iframe').forEach(iframe => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        iframeDoc.querySelectorAll('*').forEach(element => {
+                            if (element.textContent === 'Voiceflow Assistant' && !element.children.length) {
+                                element.textContent = 'TAO';
+                            }
+                        });
+                    } catch(e) {
+                        // Cross-origin, on ne peut pas accéder
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+        }
+        
+        // Démarrer l'observation dès que possible
+        replaceVoiceflowText();
+        
         (function(d, t) {
             var v = d.createElement(t);
             v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
@@ -38,6 +75,8 @@
             v.onload = function() {
                 const assistant = {
                     name: "TAO",
+                    title: "TAO",
+                    description: "Bienvenue !",
                     image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg",
                     color: "#8B42A2"
                 };
@@ -54,50 +93,46 @@
                 });
                 
                 setTimeout(function() {
-                    // CSS plus agressif pour remplacer le texte
+                    // CSS pour masquer et remplacer
                     const style = document.createElement('style');
                     style.textContent = `
-                        /* Masquer le titre Voiceflow Assistant */
-                        .vfrc-assistant-info__title,
-                        [class*="assistant-info__title"],
-                        [class*="AssistantInfo__title"],
-                        h1:contains("Voiceflow Assistant") {
-                            visibility: hidden !important;
-                            position: relative !important;
-                        }
-                        
-                        /* Ajouter TAO à la place */
-                        .vfrc-assistant-info__title::after,
-                        [class*="assistant-info__title"]::after,
-                        [class*="AssistantInfo__title"]::after {
-                            content: "TAO" !important;
-                            visibility: visible !important;
-                            position: absolute !important;
-                            left: 0 !important;
-                            top: 0 !important;
-                        }
-                        
-                        /* Couleurs */
+                        /* Forcer la couleur */
                         [class*="Header"] { background: #8B42A2 !important; }
+                        
+                        /* Cacher le watermark */
                         [class*="Watermark"] { display: none !important; }
+                        
+                        /* Masquer Voiceflow Assistant avec font-size 0 */
+                        .vfrc-assistant-info__title,
+                        [class*="AssistantInfo"],
+                        [class*="assistant-info"] h1,
+                        [class*="assistant-info"] h2 {
+                            font-size: 0 !important;
+                            line-height: 1 !important;
+                        }
+                        
+                        /* Afficher TAO à la place */
+                        .vfrc-assistant-info__title::before,
+                        [class*="AssistantInfo"]::before,
+                        [class*="assistant-info"] h1::before,
+                        [class*="assistant-info"] h2::before {
+                            content: "TAO" !important;
+                            font-size: 1.5rem !important;
+                            line-height: normal !important;
+                        }
                     `;
                     document.head.appendChild(style);
                     
-                    // Script pour remplacer le texte après chargement
-                    const replaceText = setInterval(() => {
-                        const elements = document.querySelectorAll('*');
-                        elements.forEach(el => {
-                            if (el.textContent === 'Voiceflow Assistant' && el.children.length === 0) {
-                                el.textContent = 'TAO';
-                                clearInterval(replaceText);
+                    window.voiceflow.chat.open();
+                    
+                    // Continuer à chercher et remplacer après ouverture
+                    setInterval(() => {
+                        document.querySelectorAll('*').forEach(el => {
+                            if (el.innerHTML === 'Voiceflow Assistant') {
+                                el.innerHTML = 'TAO';
                             }
                         });
-                    }, 100);
-                    
-                    // Arrêter après 10 secondes
-                    setTimeout(() => clearInterval(replaceText), 10000);
-                    
-                    window.voiceflow.chat.open();
+                    }, 500);
                     
                     setTimeout(function() {
                         window.voiceflow.chat.interact({
