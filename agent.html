@@ -11,6 +11,17 @@
             height: 100vh;
             overflow: hidden;
         }
+        /* Forcer les couleurs violettes sur le widget */
+        .vfrc-widget {
+            --vf-primary: #7B3FF2 !important;
+            --vf-header-bg: #7B3FF2 !important;
+        }
+        [class*="Header_header"] {
+            background: #7B3FF2 !important;
+        }
+        [class*="Button_primary"] {
+            background: #7B3FF2 !important;
+        }
     </style>
 </head>
 <body>
@@ -26,7 +37,10 @@
                 window.voiceflow.chat.load({
                     verify: { projectID: '68a6e2cc67f49328386b3766' },
                     url: 'https://general-runtime.voiceflow.com',
-                    versionID: 'production'
+                    versionID: 'production',
+                    assistant: {
+                        stylesheet: "data:text/css;utf8,.vfrc-widget .vfrc-header{background:#7B3FF2!important}.vfrc-button.vfrc-primary{background:#7B3FF2!important}"
+                    }
                 });
                 
                 setTimeout(function() {
