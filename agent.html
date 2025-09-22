@@ -15,7 +15,6 @@
 </head>
 <body>
     <script type="text/javascript">
-        // Lire le paramètre agent depuis l'URL
         const urlParams = new URLSearchParams(window.location.search);
         const agentCode = urlParams.get('agent') || '1';
         
@@ -26,10 +25,12 @@
             v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
             v.type = "text/javascript";
             v.onload = function() {
+                // PAS de paramètres d'apparence ici !
+                // Laissez Voiceflow utiliser vos réglages
                 window.voiceflow.chat.load({
                     verify: { projectID: '68a6e2cc67f49328386b3766' },
                     url: 'https://general-runtime.voiceflow.com',
-                    versionID: 'production'
+                    versionID: 'production'  // IMPORTANT: doit être 'production'
                 });
                 
                 setTimeout(function() {
