@@ -11,11 +11,16 @@
             height: 100vh;
             overflow: hidden;
         }
+        
+        /* Forcer les styles après chargement */
+        .vfrc-widget iframe {
+            --primary-color: #8B42A2 !important;
+        }
     </style>
 </head>
 <body>
     <script type="text/javascript">
-        // Effacer SEULEMENT les données de session, pas les paramètres
+        // Effacer seulement la session
         try {
             Object.keys(localStorage).forEach(key => {
                 if (key.includes('session') || key.includes('transcript') || key.includes('messages')) {
@@ -29,10 +34,6 @@
         
         const urlParams = new URLSearchParams(window.location.search);
         const agentCode = urlParams.get('agent') || '1';
-        
-        console.log('Agent reçu:', agentCode);
-        
-        // ID unique pour nouvelle session
         const sessionId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
         (function(d, t) {
@@ -40,18 +41,38 @@
             v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
             v.type = "text/javascript";
             v.onload = function() {
+                // Forcer les paramètres d'apparence ET le reset
+                const assistant = {
+                    name: "TAO",
+                    image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg",
+                    color: "#8B42A2"
+                };
+                
                 window.voiceflow.chat.load({
                     verify: { projectID: '68a6e2cc67f49328386b3766' },
                     url: 'https://general-runtime.voiceflow.com',
                     versionID: 'production',
-                    userID: sessionId
+                    userID: sessionId,
+                    assistant: assistant,
+                    launch: {
+                        disableWatermark: true
+                    }
                 });
                 
-                // Forcer un nouveau départ
+                // Injecter des styles CSS supplémentaires
                 setTimeout(function() {
-                    if (window.voiceflow.chat.reset) {
-                        window.voiceflow.chat.reset();
-                    }
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        [class*="Header"] { background: #8B42A2 !important; }
+                        [class*="assistant"][class*="name"] { display: none !important; }
+                        [class*="assistant"][class*="name"]::after { 
+                            content: 'TAO' !important; 
+                            display: inline !important;
+                        }
+                        [class*="Watermark"] { display: none !important; }
+                    `;
+                    document.head.appendChild(style);
+                    
                     window.voiceflow.chat.open();
                     
                     setTimeout(function() {
