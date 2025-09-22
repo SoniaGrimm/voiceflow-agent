@@ -3,6 +3,12 @@ function initVoiceflowWithAgent() {
   const urlParams = new URLSearchParams(window.location.search);
   const agentCode = urlParams.get('agent') || '1';
   
+  // AJOUTEZ CES LIGNES DE DEBUG
+  console.log('URL complète:', window.location.href);
+  console.log('Paramètres:', window.location.search);
+  console.log('Agent extrait:', agentCode);
+  alert('Agent détecté: ' + agentCode); // Pour voir visuellement
+  
   console.log('Agent détecté:', agentCode);
   
   const script = document.createElement('script');
