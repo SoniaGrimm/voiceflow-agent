@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAO Agent</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <script type="text/javascript">
+        // Lire le paramètre depuis l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const agentCode = urlParams.get('agent') || '1';
+        
+        console.log('Page GitHub - Agent:', agentCode);
+        document.body.innerHTML = '<p>Chargement agent ' + agentCode + '...</p>';
+        
+        // Charger Voiceflow
+        (function(d, t) {
+            var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+            v.onload = function() {
+                window.voiceflow.chat.load({
+                    verify: { projectID: '68a6e2cc67f49328386b3766' },
+                    url: 'https://general-runtime.voiceflow.com',
+                    versionID: 'production'
+                });
+                
+                setTimeout(function() {
+                    window.voiceflow.chat.open();
+                    setTimeout(function() {
