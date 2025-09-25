@@ -29,7 +29,15 @@
             verify:   { projectID: '68a6e2cc67f49328386b3766' }, 
             url:      'https://general-runtime.voiceflow.com',
             versionID:'production',
-            userID:   email || Date.now().toString(),  // identifiant
+            userID:   email || Date.now().toString(),
+            // NOUVELLE MÉTHODE : sessionParams
+            sessionParams: {
+              email: email,
+              prenom: prenom,
+              age: age,
+              sexe: sexe,
+              target_flow: targetFlow
+            },
             render: {
               mode: 'embedded',
               target: document.getElementById('vf-chat')
@@ -40,18 +48,24 @@
               description: "Bienvenue !",
               color: "#8B42A2",
               image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
-            },
-            launch: {
-              variables: {  // ← CHANGEMENT ICI : variables au lieu de event
-                email: email,
-                prenom: prenom,
-                age: age,
-                sexe: sexe,
-                target_flow: targetFlow
-              }
             }
           }).then(() => {
-            console.log("✅ Webchat lancé avec variables:", { email, prenom, age, sexe, target_flow: targetFlow });
+            console.log("✅ Webchat lancé avec sessionParams:", { email, prenom, age, sexe, target_flow: targetFlow });
+            
+            // MÉTHODE ALTERNATIVE : Envoyer un message caché avec les données
+            setTimeout(() => {
+              window.voiceflow.chat.interact({
+                type: 'launch',
+                payload: {
+                  email: email,
+                  prenom: prenom,
+                  age: age,  
+                  sexe: sexe,
+                  target_flow: targetFlow
+                }
+              });
+              console.log("📤 Payload envoyé via interact");
+            }, 1000);
           });
         };
         v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
