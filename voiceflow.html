@@ -13,15 +13,21 @@
     <script type="text/javascript">
       // 1) Lire les paramètres de l'URL
       const qs = new URLSearchParams(window.location.search);
-      const email      = qs.get('email')      || '';
-      const prenom     = qs.get('prenom')     || '';
-      const age        = qs.get('age')        || '';
-      const sexe       = qs.get('sexe')       || '';
-      const targetFlow = qs.get('target_flow')|| '';
+      const email      = qs.get('email')      || 'default@email.com';
+      const prenom     = qs.get('prenom')     || 'Utilisateur';
+      const age        = qs.get('age')        || '0';
+      const sexe       = qs.get('sexe')       || 'Non spécifié';
+      const targetFlow = qs.get('target_flow')|| '1';
       
-      console.log("🚀 Paramètres extraits:", { email, prenom, age, sexe, targetFlow });
+      console.log("🚀 Paramètres extraits de l'URL:", { email, prenom, age, sexe, targetFlow });
       
-      // 2) Charger le SDK V3 et lancer le chat
+      // 2) Créer un userID qui contient toutes les données
+      // Format: email|prenom|age|sexe|target_flow
+      const customUserID = `${email}|${prenom}|${age}|${sexe}|${targetFlow}`;
+      
+      console.log("📦 UserID créé pour transport des données:", customUserID);
+      
+      // 3) Charger le SDK V3 et lancer le chat
       (function (d, t) {
         const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
         v.onload = function () {
@@ -29,15 +35,8 @@
             verify:   { projectID: '68a6e2cc67f49328386b3766' }, 
             url:      'https://general-runtime.voiceflow.com',
             versionID:'production',
-            userID:   email || Date.now().toString(),
-            // NOUVELLE MÉTHODE : sessionParams
-            sessionParams: {
-              email: email,
-              prenom: prenom,
-              age: age,
-              sexe: sexe,
-              target_flow: targetFlow
-            },
+            // IMPORTANT: on utilise le userID pour passer toutes les données
+            userID:   customUserID,
             render: {
               mode: 'embedded',
               target: document.getElementById('vf-chat')
@@ -50,22 +49,8 @@
               image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
             }
           }).then(() => {
-            console.log("✅ Webchat lancé avec sessionParams:", { email, prenom, age, sexe, target_flow: targetFlow });
-            
-            // MÉTHODE ALTERNATIVE : Envoyer un message caché avec les données
-            setTimeout(() => {
-              window.voiceflow.chat.interact({
-                type: 'launch',
-                payload: {
-                  email: email,
-                  prenom: prenom,
-                  age: age,  
-                  sexe: sexe,
-                  target_flow: targetFlow
-                }
-              });
-              console.log("📤 Payload envoyé via interact");
-            }, 1000);
+            console.log("✅ Webchat lancé avec userID contenant toutes les données");
+            console.log("ℹ️ Les données seront extraites côté Voiceflow depuis user_id");
           });
         };
         v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
