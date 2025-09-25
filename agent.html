@@ -16,10 +16,8 @@
   <body>
     <div id="vf-chat"></div>
 
-    <!-- Charger le SDK Webchat V3 -->
-    <script src="https://cdn.voiceflow.com/webchat/webchat.js"></script>
-
     <script>
+      // Lire paramètres
       const params = new URLSearchParams(window.location.search);
       const agentCode = params.get('agent') || '1';
       const userEmail = params.get('user_email') || 'guest';
@@ -27,24 +25,42 @@
       console.log("Flow target (agent):", agentCode);
       console.log("User email reçu:", userEmail);
 
-      window.Voiceflow.chat.load({
-        verify: { projectID: '68a6e2cc67f49328386b3766' },
-        url: 'https://general-runtime.voiceflow.com',
-        versionID: 'production',
-        userID: userEmail,
-        render: {
-          mode: 'embedded',
-          target: document.getElementById('vf-chat')
-        }
-      }).then(widget => {
-        console.log("Widget chargé, envoi du flow-target:", agentCode);
-        setTimeout(() => {
-          widget.interact({
-            type: 'text',
-            payload: agentCode
+      // Injection manuelle du SDK Voiceflow V3
+      (function(d, t) {
+        var v = d.createElement(t);
+        v.src = "https://cdn.voiceflow.com/webchat/webchat.js"; // SDK V3
+        v.async = true;
+        v.onload = function() {
+          console.log("✅ SDK Voiceflow chargé");
+
+          window.Voiceflow.chat.load({
+            verify: { projectID: '68a6e2cc67f49328386b3766' },
+            url: 'https://general-runtime.voiceflow.com',
+            versionID: 'production',
+            userID: userEmail,
+            render: {
+              mode: 'embedded',
+              target: document.getElementById('vf-chat')
+            },
+            assistant: {
+              name: "TAO",
+              title: "TAO",
+              description: "Bienvenue !",
+              color: "#8B42A2",
+              image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
+            }
+          }).then(widget => {
+            console.log("Widget prêt, envoi du flow-target:", agentCode);
+            setTimeout(() => {
+              widget.interact({
+                type: 'text',
+                payload: agentCode
+              });
+            }, 1500);
           });
-        }, 1500);
-      });
+        };
+        d.head.appendChild(v);
+      })(document, 'script');
     </script>
   </body>
 </html>
