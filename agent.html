@@ -3,36 +3,45 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Voiceflow Agent</title>
+    <title>Voiceflow Agent V3 Embedded</title>
+    <style>
+      /* Faire en sorte que le chat occupe toute la page */
+      html, body, #vf-chat {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
   </head>
   <body>
-    <!-- Charger le script Voiceflow -->
-    <script src="https://cdn.voiceflow.com/widget/bundle.mjs" type="module"></script>
+    <!-- Conteneur du chat -->
+    <div id="vf-chat"></div>
+
+    <!-- Charger le nouveau SDK Voiceflow Webchat V3 -->
+    <script src="https://cdn.voiceflow.com/webchat.latest.js"></script>
 
     <script>
-      // 1) Récupérer les paramètres dans l’URL
+      // 1) Récupérer les paramètres URL (agent + email)
       const params = new URLSearchParams(window.location.search);
       const agent = params.get('agent') || '1';
       const userEmail = params.get('user_email') || 'guest';
 
-      // 2) Log pour vérifier
       console.log("Agent ID:", agent);
       console.log("User email reçu:", userEmail);
 
-      // 3) Initialiser Voiceflow avec les bons IDs
-      window.addEventListener('DOMContentLoaded', () => {
-        if (window.voiceflow && window.voiceflow.chat) {
-          window.voiceflow.chat.load({
-            verify: { projectID: '68a6e2cc67f49328386b3766' }, // ← Ton vrai Project ID
-            url: 'https://general-runtime.voiceflow.com',
-            versionID: 'production',  // "production" = version publiée
-            userID: userEmail
-          }).then(widget => {
-            console.log("Widget Voiceflow chargé avec userID:", userEmail);
-          });
-        } else {
-          console.error("Voiceflow widget n’est pas chargé correctement.");
+      // 2) Initialiser le Webchat en mode "embedded"
+      window.Voiceflow.chat.load({
+        verify: { projectID: '68a6e2cc67f49328386b3766' }, // Ton vrai ProjectID
+        url: 'https://general-runtime.voiceflow.com',
+        versionID: 'production',
+        userID: userEmail,
+        render: {
+          mode: 'embedded',
+          target: document.getElementById('vf-chat')
         }
+      }).then(widget => {
+        console.log("Webchat V3 Embedded chargé avec userID:", userEmail);
       });
     </script>
   </body>
