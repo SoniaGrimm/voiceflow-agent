@@ -1,13 +1,20 @@
 <script type="text/javascript">
   // 1) Lire les paramètres d'URL
   const qs = new URLSearchParams(window.location.search);
-  const targetFlow = qs.get('agent')   || '1';      // numéro de flow
-  const email      = qs.get('email')   || 'guest@example.com';
+
+  const targetFlow = qs.get('agent')   || '';
+  const email      = qs.get('email')   || '';
   const prenom     = qs.get('prenom')  || '';
   const age        = qs.get('age')     || '';
   const sexe       = qs.get('sexe')    || '';
 
-  console.log("[VF] Paramètres:", { targetFlow, email, prenom, age, sexe });
+  // Debug: log tout ce qu’on a reçu
+  console.log("[DEBUG] URL params:", qs.toString());
+  console.log("[DEBUG] targetFlow:", targetFlow);
+  console.log("[DEBUG] email:", email);
+  console.log("[DEBUG] prenom:", prenom);
+  console.log("[DEBUG] age:", age);
+  console.log("[DEBUG] sexe:", sexe);
 
   // 2) Charger le SDK V3
   (function (d, t) {
@@ -17,7 +24,7 @@
         verify:   { projectID: '68a6e2cc67f49328386b3766' }, 
         url:      'https://general-runtime.voiceflow.com',
         versionID:'production',
-        userID:   email,   // identifiant utilisateur
+        userID:   email || 'guest',   // fallback si vide
         render: {
           mode: 'embedded',
           target: document.getElementById('vf-chat')
@@ -29,7 +36,6 @@
           color: "#8B42A2",
           image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
         },
-        // 🔑 IMPORTANT : passer les variables qui existent dans Voiceflow
         launch: {
           event: {
             type: 'launch',
@@ -43,7 +49,7 @@
           }
         }
       }).then(() => {
-        console.log("✅ Webchat V3 chargé (payload envoyé au launch)");
+        console.log("✅ Webchat V3 chargé, payload envoyé.");
       });
     };
     v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
