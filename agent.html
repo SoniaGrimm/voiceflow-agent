@@ -19,13 +19,13 @@
       console.log("Agent ID:", agent);
       console.log("User email reçu:", userEmail);
 
-      // 3) Attendre que le bundle soit chargé
+      // 3) Initialiser Voiceflow avec les bons IDs
       window.addEventListener('DOMContentLoaded', () => {
         if (window.voiceflow && window.voiceflow.chat) {
           window.voiceflow.chat.load({
-            verify: { projectID: '65f3d8c08e2a140007b12345' },  // remplace par ton vrai projectID
+            verify: { projectID: '68a6e2cc67f49328386b3766' }, // ← Ton vrai Project ID
             url: 'https://general-runtime.voiceflow.com',
-            versionID: 'production',
+            versionID: 'production',  // "production" = version publiée
             userID: userEmail
           }).then(widget => {
             console.log("Widget Voiceflow chargé avec userID:", userEmail);
