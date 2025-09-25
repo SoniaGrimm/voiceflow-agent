@@ -30,7 +30,7 @@
         const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
         v.onload = function () {
           window.voiceflow.chat.load({
-            verify:   { projectID: '68a6e2cc67f49328386b3766' }, // Ton vrai ProjectID
+            verify:   { projectID: '68a6e2cc67f49328386b3766' }, // ton ProjectID
             url:      'https://general-runtime.voiceflow.com',
             versionID:'production',
             userID:   userEmail,
@@ -43,16 +43,13 @@
               title: "TAO",
               description: "Bienvenue !",
               color: "#8B42A2",
-              image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
+              image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg",
+              variables: {
+                agent_id: agentCode   // 👉 variable globale pour router dans Voiceflow
+              }
             }
           }).then(widget => {
-            console.log("✅ Webchat V3 chargé, envoi du flow-target:", agentCode);
-            setTimeout(() => {
-              widget.interact({
-                type: 'text',
-                payload: agentCode
-              });
-            }, 1500);
+            console.log("✅ Webchat V3 chargé avec userID:", userEmail, "et agent_id:", agentCode);
           });
         };
         v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
