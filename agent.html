@@ -16,8 +16,8 @@
   <body>
     <div id="vf-chat"></div>
 
-    <script>
-      // Lire paramètres
+    <script type="text/javascript">
+      // Récupérer paramètres URL
       const params = new URLSearchParams(window.location.search);
       const agentCode = params.get('agent') || '1';
       const userEmail = params.get('user_email') || 'guest';
@@ -25,32 +25,20 @@
       console.log("Flow target (agent):", agentCode);
       console.log("User email reçu:", userEmail);
 
-      // Injection manuelle du SDK Voiceflow V3
-      (function(d, t) {
-        var v = d.createElement(t);
-        v.src = "https://cdn.voiceflow.com/webchat/webchat.js"; // SDK V3
-        v.async = true;
-        v.onload = function() {
-          console.log("✅ SDK Voiceflow chargé");
-
-          window.Voiceflow.chat.load({
-            verify: { projectID: '68a6e2cc67f49328386b3766' },
-            url: 'https://general-runtime.voiceflow.com',
-            versionID: 'production',
-            userID: userEmail,
+      (function (d, t) {
+        const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+        v.onload = function () {
+          window.voiceflow.chat.load({
+            verify:   { projectID: '68a6e2cc67f49328386b3766' }, // ton vrai projectID
+            url:      'https://general-runtime.voiceflow.com',
+            versionID:'production',
+            userID:   userEmail,
             render: {
               mode: 'embedded',
               target: document.getElementById('vf-chat')
-            },
-            assistant: {
-              name: "TAO",
-              title: "TAO",
-              description: "Bienvenue !",
-              color: "#8B42A2",
-              image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
             }
           }).then(widget => {
-            console.log("Widget prêt, envoi du flow-target:", agentCode);
+            console.log("✅ Webchat V3 chargé, envoi du flow-target:", agentCode);
             setTimeout(() => {
               widget.interact({
                 type: 'text',
@@ -59,7 +47,9 @@
             }, 1500);
           });
         };
-        d.head.appendChild(v);
+        v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
+        v.type = 'text/javascript';
+        s.parentNode.insertBefore(v, s);
       })(document, 'script');
     </script>
   </body>
