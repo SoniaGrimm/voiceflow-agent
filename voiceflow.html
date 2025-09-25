@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voiceflow Agent V3 Embedded</title>
+    <style>
+      html, body, #vf-chat { margin:0; padding:0; height:100%; width:100%; }
+    </style>
+  </head>
+  <body>
+    <div id="vf-chat"></div>
+
+    <script type="text/javascript">
+      // 1) Lire les paramètres d'URL
+      const qs = new URLSearchParams(window.location.search);
+
+      const email      = qs.get('email')       || '';
+      const prenom     = qs.get('prenom')      || '';
+      const age        = qs.get('age')         || '';
+      const sexe       = qs.get('sexe')        || '';
+      const targetFlow = qs.get('target_flow') || '';
+
+      const payload = {
+        email: email || 'vide',
+        prenom: prenom || 'vide',
+        age: age || 'vide',
+        sexe: sexe || 'vide',
+        target_flow: targetFlow || 'vide'
+      };
+
+      console.log("🚀 Payload envoyé à Voiceflow:", payload);
+
+      // 2) Charger le SDK V3 et lancer le chat
+      (function (d, t) {
+        const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+        v.onload = function () {
+          window.voiceflow.chat.load({
+            verify:   { projectID: '68a6e2cc67f49328386b3766' }, 
+            url:      'https://general-runtime.voiceflow.com',
+            versionID:'production',
+            userID:   email || 'guest',   // identifiant utilisateur
+            render: {
+              mode: 'embedded',
+              target: document.getElementById('vf-chat')
+            },
+            assistant: {
+              name: "TAO",
+              title: "TAO",
+              description: "Bienvenue !",
+              color: "#8B42A2",
+              image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
+            },
+            launch: {
+              event: {
+                type: 'launch',
+                payload: payload
+              }
+            }
+          }).then(() => {
+            console.log("✅ Webchat V3 chargé avec payload:", payload);
+          });
+        };
+        v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
+        v.type = 'text/javascript';
+        s.parentNode.insertBefore(v, s);
+      })(document, 'script');
+    </script>
+  </body>
+</html>
