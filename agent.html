@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Voiceflow Agent V3 Embedded</title>
     <style>
-      html, body, #vf-chat { margin:0; padding:0; height:100%; width:100%; }
+      html, body, #vf-chat {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+      }
     </style>
   </head>
   <body>
@@ -14,12 +19,12 @@
     <script type="text/javascript">
       // 1) Lire les paramètres d'URL
       const qs = new URLSearchParams(window.location.search);
-      const targetFlow = qs.get('agent') || '1';              // n° de flow
-      const userEmail  = qs.get('user_email') || 'guest';     // identifiant
+      const targetFlow = qs.get('agent') || '1';        // n° de flow
+      const userEmail  = qs.get('email') || 'guest';    // ⚡ ici on lit ?email=...
 
-      console.log("[VF] target_flow:", targetFlow, "user:", userEmail);
+      console.log("[VF] target_flow:", targetFlow, "email reçu:", userEmail);
 
-      // 2) Charger le SDK V3 (chemin officiel)
+      // 2) Charger le SDK V3
       (function (d, t) {
         const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
         v.onload = function () {
@@ -40,13 +45,12 @@
               color: "#8B42A2",
               image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
             },
-            // 🔑 V3: passer les données ici
             launch: {
               event: {
                 type: 'launch',
                 payload: {
                   target_flow: targetFlow,
-                  user_email:  userEmail
+                  email:       userEmail   // ⚡ clé identique à ta variable Voiceflow
                 }
               }
             }
