@@ -6,9 +6,10 @@
     <title>Voiceflow Agent</title>
   </head>
   <body>
-    <script type="module">
-      import * as voiceflow from 'https://cdn.voiceflow.com/widget/bundle.mjs';
+    <!-- Charger le script Voiceflow -->
+    <script src="https://cdn.voiceflow.com/widget/bundle.mjs" type="module"></script>
 
+    <script>
       // 1) Récupérer les paramètres dans l’URL
       const params = new URLSearchParams(window.location.search);
       const agent = params.get('agent') || '1';
@@ -18,14 +19,20 @@
       console.log("Agent ID:", agent);
       console.log("User email reçu:", userEmail);
 
-      // 3) Initialiser Voiceflow avec l’email comme userID
-      voiceflow.chat.load({
-        verify: { projectID: 'YOUR_PROJECT_ID' },   // remplace par ton vrai ID
-        url: 'https://general-runtime.voiceflow.com',
-        versionID: 'production',
-        userID: userEmail
-      }).then(widget => {
-        console.log("Widget Voiceflow chargé avec userID:", userEmail);
+      // 3) Attendre que le bundle soit chargé
+      window.addEventListener('DOMContentLoaded', () => {
+        if (window.voiceflow && window.voiceflow.chat) {
+          window.voiceflow.chat.load({
+            verify: { projectID: 'YOUR_PROJECT_ID' },  // remplace par ton vrai projectID
+            url: 'https://general-runtime.voiceflow.com',
+            versionID: 'production',
+            userID: userEmail
+          }).then(widget => {
+            console.log("Widget Voiceflow chargé avec userID:", userEmail);
+          });
+        } else {
+          console.error("Voiceflow widget n’est pas chargé correctement.");
+        }
       });
     </script>
   </body>
