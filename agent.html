@@ -5,39 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Voiceflow Agent V3 Embedded</title>
     <style>
-      html, body, #vf-chat {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        width: 100%;
-      }
+      html, body, #vf-chat { margin:0; padding:0; height:100%; width:100%; }
     </style>
   </head>
   <body>
     <div id="vf-chat"></div>
 
     <script type="text/javascript">
-      // 1) Lire les paramètres d'URL
       const qs = new URLSearchParams(window.location.search);
-      const targetFlow = qs.get('agent') || '1';        // n° de flow
-      const userEmail  = qs.get('email') || 'guest';    // ⚡ ici on lit ?email=...
+      const targetFlow = qs.get('agent')   || '1';
+      const email      = qs.get('email')   || 'guest';
+      const prenom     = qs.get('prenom')  || '';
+      const age        = qs.get('age')     || '';
+      const sexe       = qs.get('sexe')    || '';
 
-      console.log("[VF] target_flow:", targetFlow, "email reçu:", userEmail);
+      console.log("[VF] target_flow:", targetFlow, "email:", email, "prenom:", prenom, "age:", age, "sexe:", sexe);
 
-      // 2) Charger le SDK V3
       (function (d, t) {
         const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
         v.onload = function () {
-          // 3) Lancer le chat en EMBEDDED + passer les infos via launch.event.payload
           window.voiceflow.chat.load({
-            verify:   { projectID: '68a6e2cc67f49328386b3766' }, // <- ton ProjectID
+            verify:   { projectID: '68a6e2cc67f49328386b3766' },
             url:      'https://general-runtime.voiceflow.com',
             versionID:'production',
-            userID:   userEmail,
-            render: {
-              mode: 'embedded',
-              target: document.getElementById('vf-chat')
-            },
+            userID:   email,
+            render: { mode: 'embedded', target: document.getElementById('vf-chat') },
             assistant: {
               name: "TAO",
               title: "TAO",
@@ -50,12 +42,15 @@
                 type: 'launch',
                 payload: {
                   target_flow: targetFlow,
-                  email:       userEmail   // ⚡ clé identique à ta variable Voiceflow
+                  email:       email,
+                  prenom:      prenom,
+                  age:         age,
+                  sexe:        sexe
                 }
               }
             }
           }).then(() => {
-            console.log("✅ Webchat V3 chargé (payload envoyé au launch)");
+            console.log("✅ Webchat V3 chargé avec prenom/age/sexe");
           });
         };
         v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
