@@ -6,46 +6,28 @@
     <title>Voiceflow Agent V3 Embedded</title>
     <style>
       html, body, #vf-chat { margin:0; padding:0; height:100%; width:100%; }
-      #debug {
-        font-family: monospace;
-        background: #f7f7f7;
-        padding: 10px;
-        border-bottom: 1px solid #ccc;
-      }
     </style>
   </head>
   <body>
-    <div id="debug"></div>
     <div id="vf-chat"></div>
 
     <script type="text/javascript">
       // 1) Lire les paramètres de l’URL
       const qs = new URLSearchParams(window.location.search);
 
-      const email      = qs.get('email')       || 'guest4@example.com';
-      const prenom     = qs.get('prenom')      || '';
-      const age        = qs.get('age')         || '';
-      const sexe       = qs.get('sexe')        || '';
-      const targetFlow = qs.get('target_flow') || '';
+      const email      = qs.get('email')      || '';
+      const prenom     = qs.get('prenom')     || '';
+      const age        = qs.get('age')        || '';
+      const sexe       = qs.get('sexe')       || '';
+      const targetFlow = qs.get('target_flow')|| '';
 
-      // Payload envoyé à Voiceflow
       const payload = {
-        email,
-        prenom,
-        age,
-        sexe,
-        target_flow: targetFlow
+        email: email || 'vide',
+        prenom: prenom || 'vide',
+        age: age || 'vide',
+        sexe: sexe || 'vide',
+        target_flow: targetFlow || 'vide'
       };
-
-      // Debug visuel
-      document.getElementById("debug").innerHTML = `
-        <strong>Paramètres lus :</strong><br>
-        email = ${email}<br>
-        prenom = ${prenom}<br>
-        age = ${age}<br>
-        sexe = ${sexe}<br>
-        target_flow = ${targetFlow}<br>
-      `;
 
       console.log("🚀 Payload envoyé à Voiceflow:", payload);
 
@@ -57,7 +39,7 @@
             verify:   { projectID: '68a6e2cc67f49328386b3766' }, 
             url:      'https://general-runtime.voiceflow.com',
             versionID:'production',
-            userID:   email,  // identifiant utilisateur
+            userID:   Date.now().toString(),   // identifiant technique unique
             render: {
               mode: 'embedded',
               target: document.getElementById('vf-chat')
@@ -72,7 +54,7 @@
             launch: {
               event: {
                 type: 'launch',
-                payload: payload
+                payload: payload   // 👈 toutes tes variables
               }
             }
           }).then(() => {
