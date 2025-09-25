@@ -7,23 +7,23 @@
   </head>
   <body>
     <script type="module">
-      import ChatWidget from 'https://cdn.voiceflow.com/widget/bundle.mjs';
+      import * as voiceflow from 'https://cdn.voiceflow.com/widget/bundle.mjs';
 
       // 1) Récupérer les paramètres dans l’URL
       const params = new URLSearchParams(window.location.search);
-      const agent = params.get('agent') || '1';          // ton paramètre agent déjà existant
-      const userEmail = params.get('user_email') || 'guest'; // ajouté depuis Adalo
+      const agent = params.get('agent') || '1';
+      const userEmail = params.get('user_email') || 'guest';
 
-      // 2) Log pour vérifier que ça marche (ouvre la console du navigateur)
+      // 2) Log pour vérifier
       console.log("Agent ID:", agent);
       console.log("User email reçu:", userEmail);
 
-      // 3) Initialiser Voiceflow avec userEmail comme userID
-      ChatWidget.init({
-        verify: { projectID: 'YOUR_PROJECT_ID' },   // ← remplace par ton vrai projectID Voiceflow
+      // 3) Initialiser Voiceflow avec l’email comme userID
+      voiceflow.chat.load({
+        verify: { projectID: 'YOUR_PROJECT_ID' },   // remplace par ton vrai ID
         url: 'https://general-runtime.voiceflow.com',
         versionID: 'production',
-        userID: userEmail   // ← la clé stable pour reconnaître l’utilisateur
+        userID: userEmail
       }).then(widget => {
         console.log("Widget Voiceflow chargé avec userID:", userEmail);
       });
