@@ -14,25 +14,24 @@
     <script type="text/javascript">
       // 1) Lire les paramètres d'URL
       const qs = new URLSearchParams(window.location.search);
-      const targetFlow = qs.get('agent')   || '1';       // numéro de flow
-      const userEmail  = qs.get('email')   || 'guest';   // email
-      const userPrenom = qs.get('prenom')  || '';        // prénom
-      const userAge    = qs.get('age')     || '';        // âge
-      const userSexe   = qs.get('sexe')    || '';        // sexe
+      const email       = qs.get('email')       || '';   // email utilisateur
+      const prenom      = qs.get('prenom')      || '';   // prénom
+      const age         = qs.get('age')         || '';   // âge
+      const sexe        = qs.get('sexe')        || '';   // sexe
+      const target_flow = qs.get('agent')       || '1';  // numéro de flow (clé agent)
 
-      console.log("[VF] target_flow:", targetFlow);
-      console.log("[VF] email:", userEmail, "prenom:", userPrenom, "age:", userAge, "sexe:", userSexe);
+      console.log("[VF] Paramètres lus:", { email, prenom, age, sexe, target_flow });
 
-      // 2) Charger le SDK V3
+      // 2) Charger le SDK V3 (chemin officiel)
       (function (d, t) {
         const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
         v.onload = function () {
-          // 3) Lancer le chat
+          // 3) Lancer le chat en mode EMBEDDED
           window.voiceflow.chat.load({
-            verify:   { projectID: '68a6e2cc67f49328386b3766' }, 
+            verify:   { projectID: '68a6e2cc67f49328386b3766' }, // ton ProjectID
             url:      'https://general-runtime.voiceflow.com',
             versionID:'production',
-            userID:   userEmail, 
+            userID:   email || 'guest',
             render: {
               mode: 'embedded',
               target: document.getElementById('vf-chat')
@@ -44,21 +43,23 @@
               color: "#8B42A2",
               image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
             },
-            // 🔑 V3: passer les données
+            // 🔑 Passer toutes les variables Voiceflow ici
             launch: {
               event: {
                 type: 'launch',
                 payload: {
-                  target_flow: targetFlow,
-                  email:  userEmail,
-                  prenom: userPrenom,
-                  age:    userAge,
-                  sexe:   userSexe
+                  email: email,
+                  prenom: prenom,
+                  age: age,
+                  sexe: sexe,
+                  target_flow: target_flow
                 }
               }
             }
           }).then(() => {
-            console.log("✅ Webchat V3 chargé (payload envoyé au launch)");
+            console.log("✅ Webchat V3 chargé avec payload Voiceflow:", {
+              email, prenom, age, sexe, target_flow
+            });
           });
         };
         v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
