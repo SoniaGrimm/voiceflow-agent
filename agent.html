@@ -16,44 +16,34 @@
   <body>
     <div id="vf-chat"></div>
 
-    <!-- SDK Voiceflow V3 -->
-    <script src="https://cdn.voiceflow.com/webchat.latest.js"></script>
+    <!-- Charger le SDK Webchat V3 -->
+    <script src="https://cdn.voiceflow.com/webchat/webchat.js"></script>
+
     <script>
-      // 1) Lire paramètres URL
       const params = new URLSearchParams(window.location.search);
-      const agentCode = params.get('agent') || '1';           // flow-target
-      const userEmail = params.get('user_email') || 'guest';  // identifiant utilisateur
+      const agentCode = params.get('agent') || '1';
+      const userEmail = params.get('user_email') || 'guest';
 
       console.log("Flow target (agent):", agentCode);
       console.log("User email reçu:", userEmail);
 
-      // 2) Charger le chat
       window.Voiceflow.chat.load({
-        verify: { projectID: '68a6e2cc67f49328386b3766' }, 
+        verify: { projectID: '68a6e2cc67f49328386b3766' },
         url: 'https://general-runtime.voiceflow.com',
         versionID: 'production',
         userID: userEmail,
         render: {
           mode: 'embedded',
           target: document.getElementById('vf-chat')
-        },
-        assistant: {
-          name: "TAO",
-          title: "TAO",
-          description: "Bienvenue !",
-          color: "#8B42A2",
-          image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
         }
       }).then(widget => {
         console.log("Widget chargé, envoi du flow-target:", agentCode);
-
-        // 3) Envoyer le code du flow comme premier message
         setTimeout(() => {
           widget.interact({
             type: 'text',
             payload: agentCode
           });
-        }, 2000); // petit délai pour laisser le chat se lancer
+        }, 1500);
       });
     </script>
   </body>
