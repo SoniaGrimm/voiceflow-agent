@@ -10,21 +10,17 @@
   </head>
   <body>
     <div id="vf-chat"></div>
-
     <script type="text/javascript">
-      // 1) Lire les paramètres de l’URL
+      // 1) Lire les paramètres de l'URL
       const qs = new URLSearchParams(window.location.search);
-
       const email      = qs.get('email')      || '';
       const prenom     = qs.get('prenom')     || '';
       const age        = qs.get('age')        || '';
       const sexe       = qs.get('sexe')       || '';
       const targetFlow = qs.get('target_flow')|| '';
-
-      const payload = { email, prenom, age, sexe, target_flow: targetFlow };
-
+      
       console.log("🚀 Paramètres extraits:", { email, prenom, age, sexe, targetFlow });
-
+      
       // 2) Charger le SDK V3 et lancer le chat
       (function (d, t) {
         const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
@@ -46,13 +42,16 @@
               image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
             },
             launch: {
-              event: {
-                type: 'launch',
-                payload: payload
+              variables: {  // ← CHANGEMENT ICI : variables au lieu de event
+                email: email,
+                prenom: prenom,
+                age: age,
+                sexe: sexe,
+                target_flow: targetFlow
               }
             }
           }).then(() => {
-            console.log("✅ Webchat lancé avec payload:", payload);
+            console.log("✅ Webchat lancé avec variables:", { email, prenom, age, sexe, target_flow: targetFlow });
           });
         };
         v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
