@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+  <body>
+    <script>
+      const qs = new URLSearchParams(window.location.search);
+      document.body.innerHTML = `
+        email = ${qs.get('email')}<br>
+        prenom = ${qs.get('prenom')}<br>
+        age = ${qs.get('age')}<br>
+        sexe = ${qs.get('sexe')}<br>
+        target_flow = ${qs.get('target_flow')}<br>
+      `;
+    </script>
+  </body>
+</html>
