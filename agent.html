@@ -1,149 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAO Agent</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
-        }
-    </style>
-</head>
-<body>
-    <script type="text/javascript">
-        // Effacer seulement la session
-        try {
-            Object.keys(localStorage).forEach(key => {
-                if (key.includes('session') || key.includes('transcript') || key.includes('messages')) {
-                    localStorage.removeItem(key);
-                }
-            });
-            sessionStorage.clear();
-        } catch(e) {
-            console.log('Erreur nettoyage:', e);
-        }
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const agentCode = urlParams.get('agent') || '1';
-        const sessionId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        
-        // Fonction pour remplacer le texte dans tout le DOM
-        function replaceVoiceflowText() {
-            // Observer pour détecter les changements
-            const observer = new MutationObserver(function(mutations) {
-                document.querySelectorAll('*').forEach(element => {
-                    if (element.childNodes.length === 1 && element.childNodes[0].nodeType === 3) {
-                        if (element.textContent.includes('Voiceflow Assistant')) {
-                            element.textContent = 'TAO';
-                        }
-                    }
-                });
-                
-                // Aussi essayer avec les iframes
-                document.querySelectorAll('iframe').forEach(iframe => {
-                    try {
-                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                        iframeDoc.querySelectorAll('*').forEach(element => {
-                            if (element.textContent === 'Voiceflow Assistant' && !element.children.length) {
-                                element.textContent = 'TAO';
-                            }
-                        });
-                    } catch(e) {
-                        // Cross-origin, on ne peut pas accéder
-                    }
-                });
-            });
-            
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true,
-                characterData: true
-            });
-        }
-        
-        // Démarrer l'observation dès que possible
-        replaceVoiceflowText();
-        
-        (function(d, t) {
-            var v = d.createElement(t);
-            v.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
-            v.type = "text/javascript";
-            v.onload = function() {
-                const assistant = {
-                    name: "TAO",
-                    title: "TAO",
-                    description: "Bienvenue !",
-                    image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg",
-                    color: "#8B42A2"
-                };
-                
-                window.voiceflow.chat.load({
-                    verify: { projectID: '68a6e2cc67f49328386b3766' },
-                    url: 'https://general-runtime.voiceflow.com',
-                    versionID: 'production',
-                    userID: sessionId,
-                    assistant: assistant,
-                    launch: {
-                        disableWatermark: true
-                    }
-                });
-                
-                setTimeout(function() {
-                    // CSS pour masquer et remplacer
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        /* Forcer la couleur */
-                        [class*="Header"] { background: #8B42A2 !important; }
-                        
-                        /* Cacher le watermark */
-                        [class*="Watermark"] { display: none !important; }
-                        
-                        /* Masquer Voiceflow Assistant avec font-size 0 */
-                        .vfrc-assistant-info__title,
-                        [class*="AssistantInfo"],
-                        [class*="assistant-info"] h1,
-                        [class*="assistant-info"] h2 {
-                            font-size: 0 !important;
-                            line-height: 1 !important;
-                        }
-                        
-                        /* Afficher TAO à la place */
-                        .vfrc-assistant-info__title::before,
-                        [class*="AssistantInfo"]::before,
-                        [class*="assistant-info"] h1::before,
-                        [class*="assistant-info"] h2::before {
-                            content: "TAO" !important;
-                            font-size: 1.5rem !important;
-                            line-height: normal !important;
-                        }
-                    `;
-                    document.head.appendChild(style);
-                    
-                    window.voiceflow.chat.open();
-                    
-                    // Continuer à chercher et remplacer après ouverture
-                    setInterval(() => {
-                        document.querySelectorAll('*').forEach(el => {
-                            if (el.innerHTML === 'Voiceflow Assistant') {
-                                el.innerHTML = 'TAO';
-                            }
-                        });
-                    }, 500);
-                    
-                    setTimeout(function() {
-                        window.voiceflow.chat.interact({
-                            type: 'text',
-                            payload: agentCode
-                        });
-                    }, 2000);
-                }, 3000);
-            };
-            document.head.appendChild(v);
-        })(document, 'script');
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voiceflow Agent</title>
+  </head>
+  <body>
+    <script type="module">
+      import ChatWidget from 'https://cdn.voiceflow.com/widget/bundle.mjs';
+
+      // 1) Récupérer les paramètres dans l’URL
+      const params = new URLSearchParams(window.location.search);
+      const agent = params.get('agent') || '1';          // ton paramètre agent déjà existant
+      const userEmail = params.get('user_email') || 'guest'; // ajouté depuis Adalo
+
+      // 2) Log pour vérifier que ça marche (ouvre la console du navigateur)
+      console.log("Agent ID:", agent);
+      console.log("User email reçu:", userEmail);
+
+      // 3) Initialiser Voiceflow avec userEmail comme userID
+      ChatWidget.init({
+        verify: { projectID: 'YOUR_PROJECT_ID' },   // ← remplace par ton vrai projectID Voiceflow
+        url: 'https://general-runtime.voiceflow.com',
+        versionID: 'production',
+        userID: userEmail   // ← la clé stable pour reconnaître l’utilisateur
+      }).then(widget => {
+        console.log("Widget Voiceflow chargé avec userID:", userEmail);
+      });
     </script>
-</body>
+  </body>
 </html>
