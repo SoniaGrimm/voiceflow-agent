@@ -12,34 +12,71 @@
     <div id="vf-chat"></div>
 
     <script>
-      // 1) Lire les paramètres de l'URL
+      // Lire les paramètres
       const qs         = new URLSearchParams(window.location.search);
-      const email      = qs.get('email')        || 'default@email.com';
-      const prenom     = qs.get('prenom')       || 'Utilisateur';
-      const age        = qs.get('age')          || '0';
-      const sexe       = qs.get('sexe')         || 'Non spécifié';
-      const targetFlow = qs.get('target_flow')  || '1';
+      const email      = qs.get('email')       || 'default@email.com';
+      const prenom     = qs.get('prenom')      || 'Utilisateur';
+      const age        = qs.get('age')         || '0';
+      const sexe       = qs.get('sexe')        || 'Non spécifié';
+      const targetFlow = qs.get('target_flow') || '1';
 
-      // 2) UserID contenant les données (côté VF tu décoderas user_id)
+      // Transport dans userID (décodé côté Voiceflow)
       const customUserID = `${email}|${prenom}|${age}|${sexe}|${targetFlow}`;
 
-      // 3) Charger le SDK V3 et lancer le chat (widget-next)
+      // Utilitaire : recherche "profonde" (DOM + shadow roots ouverts)
+      const queryAllDeep = (root, predicate, acc = []) => {
+        const tree = root.querySelectorAll('*');
+        for (const el of tree) {
+          if (predicate(el)) acc.push(el);
+          if (el.shadowRoot) queryAllDeep(el.shadowRoot, predicate, acc);
+        }
+        return acc;
+      };
+
+      // Patch visuel: remplace "Start new chat" -> FR (avec MutationObserver)
+      const installCTAPatch = () => {
+        const apply = () => {
+          const btns = queryAllDeep(
+            document,
+            el => (el.tagName === 'BUTTON' || el.getAttribute('role') === 'button')
+                  && /start\s+new\s+chat/i.test(el.textContent || '')
+          );
+          if (btns.length) {
+            btns.forEach(b => {
+              b.textContent = 'Démarrer une nouvelle discussion';
+              b.setAttribute('aria-label', 'Démarrer une nouvelle discussion');
+            });
+            return true;
+          }
+          return false;
+        };
+
+        // 1) tentatives rapides au démarrage
+        let tries = 0;
+        const t = setInterval(() => {
+          if (apply() || ++tries > 20) clearInterval(t);   // ~2s
+        }, 100);
+
+        // 2) observe les changements du DOM (si le widget remonte plus tard)
+        const mo = new MutationObserver(() => apply());
+        mo.observe(document.documentElement, { childList: true, subtree: true });
+      };
+
+      // Charger le widget Voiceflow
       (function (d, t) {
         const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
         v.onload = function () {
           window.voiceflow.chat.load({
-            verify:   { projectID: '68a6e2cc67f49328386b3766' },
-            url:      'https://general-runtime.voiceflow.com',
-            versionID:'production',
+            verify:    { projectID: '68a6e2cc67f49328386b3766' },
+            url:       'https://general-runtime.voiceflow.com',
+            versionID: 'production',
 
-            // Langue & libellés UI
+            // Langue & libellés
             locale: 'fr-FR',
             strings: {
-              // compat global (anciennes clés)
               startNewChat: 'Démarrer une nouvelle discussion',
               inputPlaceholder: 'Écris ton message…',
               send: 'Envoyer',
-              // compat assistant v3 (home screen CTA)
               homeScreen: {
                 title: 'TAO',
                 description: 'Bienvenue !',
@@ -47,7 +84,7 @@
               }
             },
 
-            // Transport des données utilisateur
+            // Données utilisateur
             userID: customUserID,
 
             // Rendu embarqué
@@ -56,7 +93,7 @@
               target: document.getElementById('vf-chat')
             },
 
-            // Apparence assistant
+            // Apparence
             assistant: {
               name: "TAO",
               title: "TAO",
@@ -65,7 +102,9 @@
               image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
             }
           }).then(() => {
-            console.log("✅ Webchat lancé (FR) avec userID:", customUserID);
+            // Patch le CTA si un libellé resterait en anglais via cache
+            installCTAPatch();
+            console.log("✅ Webchat FR lancé avec userID:", customUserID);
           });
         };
         v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
