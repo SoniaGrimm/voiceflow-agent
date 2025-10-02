@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="fr">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,37 +10,53 @@
   </head>
   <body>
     <div id="vf-chat"></div>
-    <script type="text/javascript">
+
+    <script>
       // 1) Lire les paramètres de l'URL
-      const qs = new URLSearchParams(window.location.search);
-      const email      = qs.get('email')      || 'default@email.com';
-      const prenom     = qs.get('prenom')     || 'Utilisateur';
-      const age        = qs.get('age')        || '0';
-      const sexe       = qs.get('sexe')       || 'Non spécifié';
-      const targetFlow = qs.get('target_flow')|| '1';
-      
-      console.log("🚀 Paramètres extraits de l'URL:", { email, prenom, age, sexe, targetFlow });
-      
-      // 2) Créer un userID qui contient toutes les données
-      // Format: email|prenom|age|sexe|target_flow
+      const qs         = new URLSearchParams(window.location.search);
+      const email      = qs.get('email')        || 'default@email.com';
+      const prenom     = qs.get('prenom')       || 'Utilisateur';
+      const age        = qs.get('age')          || '0';
+      const sexe       = qs.get('sexe')         || 'Non spécifié';
+      const targetFlow = qs.get('target_flow')  || '1';
+
+      // 2) UserID contenant les données (côté VF tu décoderas user_id)
       const customUserID = `${email}|${prenom}|${age}|${sexe}|${targetFlow}`;
-      
-      console.log("📦 UserID créé pour transport des données:", customUserID);
-      
-      // 3) Charger le SDK V3 et lancer le chat
+
+      // 3) Charger le SDK V3 et lancer le chat (widget-next)
       (function (d, t) {
         const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
         v.onload = function () {
           window.voiceflow.chat.load({
-            verify:   { projectID: '68a6e2cc67f49328386b3766' }, 
+            verify:   { projectID: '68a6e2cc67f49328386b3766' },
             url:      'https://general-runtime.voiceflow.com',
             versionID:'production',
-            // IMPORTANT: on utilise le userID pour passer toutes les données
-            userID:   customUserID,
+
+            // Langue & libellés UI
+            locale: 'fr-FR',
+            strings: {
+              // compat global (anciennes clés)
+              startNewChat: 'Démarrer une nouvelle discussion',
+              inputPlaceholder: 'Écris ton message…',
+              send: 'Envoyer',
+              // compat assistant v3 (home screen CTA)
+              homeScreen: {
+                title: 'TAO',
+                description: 'Bienvenue !',
+                cta: 'Démarrer une nouvelle discussion'
+              }
+            },
+
+            // Transport des données utilisateur
+            userID: customUserID,
+
+            // Rendu embarqué
             render: {
               mode: 'embedded',
               target: document.getElementById('vf-chat')
             },
+
+            // Apparence assistant
             assistant: {
               name: "TAO",
               title: "TAO",
@@ -49,8 +65,7 @@
               image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
             }
           }).then(() => {
-            console.log("✅ Webchat lancé avec userID contenant toutes les données");
-            console.log("ℹ️ Les données seront extraites côté Voiceflow depuis user_id");
+            console.log("✅ Webchat lancé (FR) avec userID:", customUserID);
           });
         };
         v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
