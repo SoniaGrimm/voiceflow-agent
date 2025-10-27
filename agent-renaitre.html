@@ -298,19 +298,35 @@
             async initializeChat() {
                 addDebugLog('🔌 Initialisation de la connexion Voiceflow...');
                 
-                const response = await this.callVoiceflowAPI('launch');
-                
-                if (response) {
-                    addDebugLog('✅ Connexion réussie!', 'success');
-                    this.vfConnected = true;
-                    this.updateStatus(true);
-                    this.handleResponse(response);
-                    this.toggleInput(true);
-                } else {
-                    addDebugLog('⚠️ Connexion échouée, mode hors-ligne', 'error');
-                    this.updateStatus(false);
-                    this.addMessage("Bonjour! Je suis l'assistant Renaitre. Comment puis-je vous aider aujourd'hui?", 'bot');
-                    this.toggleInput(true);
+   // Récupérer le paramètre target_flow de l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetFlow = urlParams.get('target_flow');
+        
+        if (targetFlow) {
+            addDebugLog(`🎯 Target flow détecté: ${targetFlow}`);
+        }
+        
+        // Lancer l'agent avec ou sans flow spécifique
+        let response;
+        if (targetFlow) {
+            // Lancer avec un flow spécifique
+            response = await this.callVoiceflowAPI('launch', { flow: targetFlow });
+        } else {
+            // Lancer normalement
+            response = await this.callVoiceflowAPI('launch');
+        }
+        
+        if (response) {
+            addDebugLog('✅ Connexion réussie!', 'success');
+            this.vfConnected = true;
+            this.updateStatus(true);
+            this.handleResponse(response);
+            this.toggleInput(true);
+        } else {
+            addDebugLog('⚠️ Connexion échouée, mode hors-ligne', 'error');
+            this.updateStatus(false);
+            this.addMessage("Bonjour! Je suis Oréa. Comment puis-je vous aider aujourd'hui?", 'bot');
+            this.toggleInput(true);
                 }
             }
             
