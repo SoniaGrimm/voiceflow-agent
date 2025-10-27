@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Assistant Renaitre</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #84a99b 0%, #6b8f82 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 0;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #84a99b 0%, #6b8f82 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            font-size: 12px;
+            margin-top: 5px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .status-connected {
+            background: rgba(34, 197, 94, 0.2);
+            color: #16a34a;
+        }
+
+        .status-disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+
+        .debug-section {
+            background: #f1f3f4;
+            border-bottom: 2px solid #e0e0e0;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow-y: auto;
+            color: #333;
+        }
+
+        .debug-log {
+            margin: 2px 0;
+            padding: 2px;
+            border-left: 3px solid #84a99b;
+            padding-left: 8px;
+        }
+
+        .debug-error {
+            border-left-color: #dc2626;
+            color: #dc2626;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .debug-success {
+            border-left-color: #16a34a;
+            color: #16a34a;
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #84a99b 0%, #6b8f82 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            background: white;
+            color: #333;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #84a99b;
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #84a99b 0%, #6b8f82 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+            min-width: 60px;
+        }
+
+        .send-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            max-width: 80px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #666;
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0.4; }
+            30% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🌱 Assistant Renaitre</h1>
+            <div class="status-indicator" id="statusIndicator">🟡 Connexion en cours...</div>
+        </div>
+        
+        <div class="debug-section" id="debugSection">
+            <div class="debug-log">🚀 Démarrage du chat...</div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <input 
+                type="text" 
+                id="chatInput" 
+                class="chat-input" 
+                placeholder="Écrivez votre message..."
+                disabled
+            >
+            <button id="sendButton" class="send-button" disabled>
+                Envoyer
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        function addDebugLog(message, type = 'info') {
+            const debugSection = document.getElementById('debugSection');
+            const logDiv = document.createElement('div');
+            logDiv.className = `debug-log ${type === 'error' ? 'debug-error' : type === 'success' ? 'debug-success' : ''}`;
+            logDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            debugSection.appendChild(logDiv);
+            debugSection.scrollTop = debugSection.scrollHeight;
+        }
+
+        class VoiceflowChat {
+            constructor() {
+                // Configuration Voiceflow pour Renaitre
+                this.projectID = '68f60c3d696d8e9d6afde4d0';  // Project ID de Renaitre
+                this.apiKey = 'VF.DM.673c8f988a42dc6f9bd71f53.4zskV71qJJ8iHIZU'; // Clé API - À REMPLACER par la vraie clé
+                this.userId = 'user_' + Math.random().toString(36).substring(7);
+                this.vfConnected = false;
+                
+                addDebugLog(`🎯 Project ID: ${this.projectID}`);
+                addDebugLog(`👤 User ID: ${this.userId}`);
+                
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatInput = document.getElementById('chatInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                this.statusIndicator = document.getElementById('statusIndicator');
+                
+                this.initializeChat();
+                this.setupEventListeners();
+            }
+            
+            async initializeChat() {
+                addDebugLog('🔌 Initialisation de la connexion Voiceflow...');
+                
+                const response = await this.callVoiceflowAPI('launch');
+                
+                if (response) {
+                    addDebugLog('✅ Connexion réussie!', 'success');
+                    this.vfConnected = true;
+                    this.updateStatus(true);
+                    this.handleResponse(response);
+                    this.toggleInput(true);
+                } else {
+                    addDebugLog('⚠️ Connexion échouée, mode hors-ligne', 'error');
+                    this.updateStatus(false);
+                    this.addMessage("Bonjour! Je suis l'assistant Renaitre. Comment puis-je vous aider aujourd'hui?", 'bot');
+                    this.toggleInput(true);
+                }
+            }
+            
+            setupEventListeners() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendMessage();
+                    }
+                });
+            }
+            
+            updateStatus(connected) {
+                this.vfConnected = connected;
+                if (connected) {
+                    this.statusIndicator.textContent = '🟢 Connecté';
+                    this.statusIndicator.className = 'status-indicator status-connected';
+                } else {
+                    this.statusIndicator.textContent = '🔴 Déconnecté';
+                    this.statusIndicator.className = 'status-indicator status-disconnected';
+                }
+            }
+            
+            async callVoiceflowAPI(type, payload = null) {
+                try {
+                    const body = {
+                        action: {
+                            type: type
+                        }
+                    };
+                    
+                    if (payload) {
+                        body.action.payload = payload;
+                    }
+                    
+                    const url = `https://general-runtime.voiceflow.com/state/user/${this.userId}/interact`;
+                    addDebugLog(`🔄 Appel API: ${type}`);
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'accept': 'application/json',
+                            'content-type': 'application/json',
+                            'Authorization': this.apiKey
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    
+                    addDebugLog(`📥 Response: ${response.status} ${response.statusText}`);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        addDebugLog(`❌ Erreur API: ${response.status} - ${errorText}`, 'error');
+                        
+                        // Essayer une méthode alternative
+                        if (response.status === 401 || response.status === 403) {
+                            addDebugLog('🔄 Tentative méthode alternative...');
+                            return await this.callVoiceflowAPIAlternative(type, payload);
+                        }
+                        
+                        if (response.status === 404) {
+                            addDebugLog('🔄 Tentative avec Bearer token...');
+                            return await this.callVoiceflowAPIWithBearer(type, payload);
+                        }
+                        
+                        return null;
+                    }
+                    
+                    const data = await response.json();
+                    addDebugLog(`✅ Données reçues: ${data.trace ? data.trace.length + ' traces' : 'pas de traces'}`, 'success');
+                    return data;
+                    
+                } catch (error) {
+                    addDebugLog(`💥 Exception: ${error.message}`, 'error');
+                    return null;
+                }
+            }
+            
+            async callVoiceflowAPIAlternative(type, payload = null) {
+                try {
+                    const body = {
+                        action: {
+                            type: type
+                        }
+                    };
+                    
+                    if (payload) {
+                        body.action.payload = payload;
+                    }
+                    
+                    const url = `https://general-runtime.voiceflow.com/state/user/${this.userId}/interact/${this.projectID}`;
+                    addDebugLog(`🔄 URL alternative avec project: ${url}`);
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'accept': 'application/json',
+                            'content-type': 'application/json',
+                            'Authorization': this.apiKey
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    
+                    addDebugLog(`📥 Alternative response: ${response.status} ${response.statusText}`);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        addDebugLog(`❌ Alternative erreur: ${response.status} - ${errorText}`, 'error');
+                        return null;
+                    }
+                    
+                    const data = await response.json();
+                    addDebugLog(`✅ Alternative réussi: ${data.trace ? data.trace.length + ' traces' : 'pas de traces'}`, 'success');
+                    return data;
+                    
+                } catch (error) {
+                    addDebugLog(`💥 Alternative exception: ${error.message}`, 'error');
+                    return null;
+                }
+            }
+            
+            async callVoiceflowAPIWithBearer(type, payload = null) {
+                try {
+                    const body = {
+                        action: {
+                            type: type
+                        }
+                    };
+                    
+                    if (payload) {
+                        body.action.payload = payload;
+                    }
+                    
+                    const url = `https://general-runtime.voiceflow.com/state/user/${this.userId}/interact`;
+                    addDebugLog(`🔄 Tentative Bearer: ${url}`);
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'accept': 'application/json',
+                            'content-type': 'application/json',
+                            'Authorization': `Bearer ${this.apiKey}`
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    
+                    addDebugLog(`📥 Bearer Response: ${response.status} ${response.statusText}`);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        addDebugLog(`❌ Bearer erreur: ${response.status} - ${errorText}`, 'error');
+                        return null;
+                    }
+                    
+                    const data = await response.json();
+                    addDebugLog(`✅ Bearer réussi: ${data.trace ? data.trace.length + ' traces' : 'pas de traces'}`, 'success');
+                    return data;
+                    
+                } catch (error) {
+                    addDebugLog(`💥 Bearer exception: ${error.message}`, 'error');
+                    return null;
+                }
+            }
+            
+            async sendMessage() {
+                const message = this.chatInput.value.trim();
+                if (!message || this.sendButton.disabled) return;
+                
+                addDebugLog(`📝 Message utilisateur: "${message}"`);
+                
+                this.addMessage(message, 'user');
+                this.chatInput.value = '';
+                this.showTyping(true);
+                this.toggleInput(false);
+                
+                // Essayer d'abord Voiceflow
+                if (this.vfConnected) {
+                    const response = await this.callVoiceflowAPI('text', message);
+                    if (response) {
+                        setTimeout(() => {
+                            this.showTyping(false);
+                            this.handleResponse(response);
+                            this.toggleInput(true);
+                        }, 800);
+                        return;
+                    } else {
+                        this.updateStatus(false);
+                    }
+                }
+                
+                // Mode hors-ligne
+                addDebugLog('🤖 Mode hors-ligne: utilisation réponse générique');
+                setTimeout(() => {
+                    this.showTyping(false);
+                    this.addMessage('Je suis désolé, j\'ai des difficultés de connexion en ce moment. Pouvez-vous reformuler votre question ?', 'bot');
+                    this.toggleInput(true);
+                }, 1200);
+            }
+            
+            handleResponse(data) {
+                if (!data || !data.trace) {
+                    addDebugLog('❌ Données de réponse invalides', 'error');
+                    this.addMessage("Désolé, je n'ai pas reçu de réponse claire.", 'bot');
+                    return;
+                }
+                
+                let messageFound = false;
+                data.trace.forEach((trace, index) => {
+                    addDebugLog(`📄 Trace ${index}: type="${trace.type}"`);
+                    
+                    if (trace.type === 'text' && trace.payload && trace.payload.message) {
+                        this.addMessage(trace.payload.message, 'bot');
+                        addDebugLog(`💬 Message bot: "${trace.payload.message}"`, 'success');
+                        messageFound = true;
+                    } else if (trace.type === 'speak' && trace.payload && trace.payload.message) {
+                        this.addMessage(trace.payload.message, 'bot');
+                        addDebugLog(`🗣️ Message speak: "${trace.payload.message}"`, 'success');
+                        messageFound = true;
+                    }
+                });
+                
+                if (!messageFound) {
+                    addDebugLog('⚠️ Aucun message trouvé dans les traces');
+                    this.addMessage("Je vous écoute, continuez...", 'bot');
+                }
+            }
+            
+            addMessage(text, sender) {
+                const messageEl = document.createElement('div');
+                messageEl.className = `message ${sender}`;
+                
+                const textEl = document.createElement('div');
+                textEl.textContent = text;
+                
+                const timeEl = document.createElement('div');
+                timeEl.className = 'message-time';
+                timeEl.textContent = new Date().toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                messageEl.appendChild(textEl);
+                messageEl.appendChild(timeEl);
+                
+                this.chatMessages.appendChild(messageEl);
+                this.scrollToBottom();
+            }
+            
+            showTyping(show) {
+                this.typingIndicator.style.display = show ? 'flex' : 'none';
+                if (show) {
+                    this.scrollToBottom();
+                }
+            }
+            
+            toggleInput(enabled) {
+                this.chatInput.disabled = !enabled;
+                this.sendButton.disabled = !enabled;
+                if (enabled) {
+                    this.chatInput.focus();
+                }
+            }
+            
+            scrollToBottom() {
+                setTimeout(() => {
+                    this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+                }, 100);
+            }
+        }
+        
+        // Initialiser le chat
+        document.addEventListener('DOMContentLoaded', () => {
+            addDebugLog('🚀 Page chargée, initialisation de Renaitre...');
+            new VoiceflowChat();
+        });
+    </script>
+</body>
+</html>
