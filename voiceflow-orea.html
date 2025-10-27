@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voiceflow Agent Oréa Embedded</title>
+    <style>
+      html, body, #vf-chat { margin:0; padding:0; height:100%; width:100%; }
+    </style>
+  </head>
+  <body>
+    <div id="vf-chat"></div>
+
+    <script>
+      // Lire les paramètres
+      const qs         = new URLSearchParams(window.location.search);
+      const email      = qs.get('email')       || 'default@email.com';
+      const prenom     = qs.get('prenom')      || 'Utilisateur';
+      const age        = qs.get('age')         || '0';
+      const sexe       = qs.get('sexe')        || 'Non spécifié';
+      const targetFlow = qs.get('target_flow') || '1';
+
+      // Transport dans userID (décodé côté Voiceflow)
+      const customUserID = `${email}|${prenom}|${age}|${sexe}|${targetFlow}`;
+
+      // Utilitaire : recherche "profonde" (DOM + shadow roots ouverts)
+      const queryAllDeep = (root, predicate, acc = []) => {
+        const tree = root.querySelectorAll('*');
+        for (const el of tree) {
+          if (predicate(el)) acc.push(el);
+          if (el.shadowRoot) queryAllDeep(el.shadowRoot, predicate, acc);
+        }
+        return acc;
+      };
+
+      // Patch visuel: remplace "Start new chat" -> FR (avec MutationObserver)
+      const installCTAPatch = () => {
+        const apply = () => {
+          const btns = queryAllDeep(
+            document,
+            el => (el.tagName === 'BUTTON' || el.getAttribute('role') === 'button')
+                  && /start\s+new\s+chat/i.test(el.textContent || '')
+          );
+          if (btns.length) {
+            btns.forEach(b => {
+              b.textContent = 'Démarrer une nouvelle discussion';
+              b.setAttribute('aria-label', 'Démarrer une nouvelle discussion');
+            });
+            return true;
+          }
+          return false;
+        };
+
+        // 1) tentatives rapides au démarrage
+        let tries = 0;
+        const t = setInterval(() => {
+          if (apply() || ++tries > 20) clearInterval(t);   // ~2s
+        }, 100);
+
+        // 2) observe les changements du DOM (si le widget remonte plus tard)
+        const mo = new MutationObserver(() => apply());
+        mo.observe(document.documentElement, { childList: true, subtree: true });
+      };
+
+      // Charger le widget Voiceflow
+      (function (d, t) {
+        const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+        v.onload = function () {
+          window.voiceflow.chat.load({
+            verify:    { projectID: '68f60c3d696d8e9d6afde4d0' },  // Project ID d'Oréa
+            url:       'https://general-runtime.voiceflow.com',
+            versionID: 'production',
+
+            // Langue & libellés
+            locale: 'fr-FR',
+            strings: {
+              startNewChat: 'Démarrer une nouvelle discussion',
+              inputPlaceholder: 'Écris ton message…',
+              send: 'Envoyer',
+              homeScreen: {
+                title: 'Oréa',
+                description: 'Bienvenue !',
+                cta: 'Démarrer une nouvelle discussion'
+              }
+            },
+
+            // Données utilisateur
+            userID: customUserID,
+
+            // Rendu embarqué
+            render: {
+              mode: 'embedded',
+              target: document.getElementById('vf-chat')
+            },
+
+            // Apparence
+            assistant: {
+              name: "Oréa",
+              title: "Oréa",
+              description: "Bienvenue !",
+              color: "#84a99b",  // Couleur verte
+              image: "https://soniagrimm.github.io/voiceflow-agent/Orea.jpg"  // Image d'Oréa
+            }
+          }).then(() => {
+            // Patch le CTA si un libellé resterait en anglais via cache
+            installCTAPatch();
+            console.log("✅ Webchat FR lancé avec userID:", customUserID);
+          });
+        };
+        v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
+        v.type = 'text/javascript';
+        s.parentNode.insertBefore(v, s);
+      })(document, 'script');
+    </script>
+  </body>
+</html>
