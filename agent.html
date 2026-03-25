@@ -5,55 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Voiceflow Agent V3 Embedded</title>
     <style>
-      html, body, #vf-chat { margin:0; padding:0; height:100%; width:100%; }
+      html, body { margin:0; padding:0; height:100%; width:100%; overflow:hidden; }
+
+      /* ── BOUTON RETOUR ── */
+      #btn-retour {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        z-index: 9999;
+        background: #8B42A2;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 8px 18px;
+        font-size: 15px;
+        font-family: sans-serif;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      }
+
+      #vf-chat { margin:0; padding:0; height:100%; width:100%; }
     </style>
   </head>
   <body>
+
+    <!-- ══ BOUTON RETOUR ══ -->
+    <button id="btn-retour" onclick="goBack()">← Retour</button>
+
     <div id="vf-chat"></div>
 
-    <script type="text/javascript">
-      // 1) Lire les paramètres d'URL
-      const qs = new URLSearchParams(window.location.search);
+    <!-- ══ FIX 1 : BOUTON RETOUR — navigation vers Adalo ══ -->
+    <script>
+      function goBack() {
+        // Remonte au niveau de la WebView Adalo et revient en arrière
+        try { window.top.history.back(); } catch(e) {}
+        try { window.parent.postMessage({ action: 'goBack' }, '*'); } catch(e) {}
+      }
+    </script>
 
+    <!-- ══ FIX 2 : AUDIO — réveille le son après utilisation du micro ══ -->
+    <script>
+      (function() {
+        const OriginalAC = window.AudioContext || window.webkitAudioContext;
+        if (!OriginalAC) return;
+
+        const allContexts = [];
+
+        // On intercepte chaque AudioContext créé par Voiceflow
+        function PatchedAC(options) {
+          const ctx = new OriginalAC(options);
+          allContexts.push(ctx);
+          return ctx;
+        }
+        PatchedAC.prototype = OriginalAC.prototype;
+        window.AudioContext = PatchedAC;
+        window.webkitAudioContext = PatchedAC;
+
+        // À chaque interaction (clic, toucher), on réveille les contextes suspendus
+        function resumeAll() {
+          allContexts.forEach(function(ctx) {
+            if (ctx && ctx.state === 'suspended') {
+              ctx.resume().catch(function(){});
+            }
+          });
+        }
+
+        document.addEventListener('click',      resumeAll, true);
+        document.addEventListener('touchstart', resumeAll, true);
+        document.addEventListener('touchend',   resumeAll, true);
+        document.addEventListener('pointerup',  resumeAll, true);
+      })();
+    </script>
+
+    <!-- ══ CHARGEMENT VOICEFLOW (inchangé) ══ -->
+    <script type="text/javascript">
+      const qs = new URLSearchParams(window.location.search);
       const email      = qs.get('email')       || '';
       const prenom     = qs.get('prenom')      || '';
       const age        = qs.get('age')         || '';
       const sexe       = qs.get('sexe')        || '';
       const targetFlow = qs.get('target_flow') || '';
-
       const payload = {
-        email: email || 'vide',
-        prenom: prenom || 'vide',
-        age: age || 'vide',
-        sexe: sexe || 'vide',
+        email:       email      || 'vide',
+        prenom:      prenom     || 'vide',
+        age:         age        || 'vide',
+        sexe:        sexe       || 'vide',
         target_flow: targetFlow || 'vide'
       };
-
       console.log("🚀 Payload envoyé à Voiceflow:", payload);
 
-      // 2) Charger le SDK V3 et lancer le chat
       (function (d, t) {
         const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
         v.onload = function () {
           window.voiceflow.chat.load({
-            verify:   { projectID: '68a6e2cc67f49328386b3766' }, 
-            url:      'https://general-runtime.voiceflow.com',
-            versionID:'production',
-            userID:   email || 'guest',   // identifiant utilisateur
+            verify:    { projectID: '68a6e2cc67f49328386b3766' },
+            url:       'https://general-runtime.voiceflow.com',
+            versionID: 'production',
+            userID:    email || 'guest',
             render: {
-              mode: 'embedded',
+              mode:   'embedded',
               target: document.getElementById('vf-chat')
             },
             assistant: {
-              name: "TAO",
-              title: "TAO",
+              name:        "TAO",
+              title:       "TAO",
               description: "Bienvenue !",
-              color: "#8B42A2",
-              image: "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
+              color:       "#8B42A2",
+              image:       "https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
             },
             launch: {
               event: {
-                type: 'launch',
+                type:    'launch',
                 payload: payload
               }
             }
@@ -66,5 +128,6 @@
         s.parentNode.insertBefore(v, s);
       })(document, 'script');
     </script>
+
   </body>
 </html>
