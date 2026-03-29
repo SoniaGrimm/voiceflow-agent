@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Voiceflow Agent V3 Embedded</title>
     <style>
-      html, body { margin:0; padding:0; height:100%; width:100%; overflow:hidden; }
+      html, body { margin:0; padding:0; height:100%; width:100%; overflow:hidden; background:#f5f0f8; }
 
       /* ── BOUTON RETOUR ── */
       #btn-retour {
@@ -24,6 +24,70 @@
         box-shadow: 0 2px 6px rgba(0,0,0,0.25);
       }
 
+      /* ── ÉCRAN DE CHARGEMENT ── */
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 8000;
+        background: #f5f0f8;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        font-family: sans-serif;
+      }
+      #loading-screen .avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 4px 12px rgba(139,66,162,0.3);
+      }
+      #loading-screen .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e0c8f0;
+        border-top-color: #8B42A2;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+      }
+      #loading-screen .loading-text {
+        color: #8B42A2;
+        font-size: 16px;
+        font-weight: 500;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* ── ÉCRAN D'ERREUR ── */
+      #error-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 8000;
+        background: #f5f0f8;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        font-family: sans-serif;
+        padding: 32px;
+        text-align: center;
+      }
+      #error-screen .error-icon { font-size: 48px; }
+      #error-screen .error-text { color: #666; font-size: 15px; line-height: 1.5; }
+      #error-screen .retry-btn {
+        background: #8B42A2;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 12px 28px;
+        font-size: 16px;
+        font-family: sans-serif;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(139,66,162,0.35);
+      }
+
       #vf-chat { margin:0; padding:0; height:100%; width:100%; }
     </style>
   </head>
@@ -32,12 +96,27 @@
     <!-- ══ BOUTON RETOUR ══ -->
     <button id="btn-retour" onclick="goBack()">← Retour</button>
 
+    <!-- ══ ÉCRAN DE CHARGEMENT ══ -->
+    <div id="loading-screen">
+      <img class="avatar"
+           src="https://cm4-production-assets.s3.amazonaws.com/1730303517127-cute-wolf.jpg"
+           alt="TAO" />
+      <div class="spinner"></div>
+      <div class="loading-text">TAO arrive…</div>
+    </div>
+
+    <!-- ══ ÉCRAN D'ERREUR / RETRY ══ -->
+    <div id="error-screen">
+      <div class="error-icon">🐺</div>
+      <div class="error-text">TAO n'arrive pas à se connecter.<br>Vérifie ta connexion et réessaie !</div>
+      <button class="retry-btn" onclick="retryLoad()">Réessayer</button>
+    </div>
+
     <div id="vf-chat"></div>
 
-    <!-- ══ FIX 1 : BOUTON RETOUR — navigation vers Adalo ══ -->
+    <!-- ══ FIX 1 : BOUTON RETOUR ══ -->
     <script>
       function goBack() {
-        // Remonte au niveau de la WebView Adalo et revient en arrière
         try { window.top.history.back(); } catch(e) {}
         try { window.parent.postMessage({ action: 'goBack' }, '*'); } catch(e) {}
       }
@@ -48,10 +127,7 @@
       (function() {
         const OriginalAC = window.AudioContext || window.webkitAudioContext;
         if (!OriginalAC) return;
-
         const allContexts = [];
-
-        // On intercepte chaque AudioContext créé par Voiceflow
         function PatchedAC(options) {
           const ctx = new OriginalAC(options);
           allContexts.push(ctx);
@@ -60,8 +136,6 @@
         PatchedAC.prototype = OriginalAC.prototype;
         window.AudioContext = PatchedAC;
         window.webkitAudioContext = PatchedAC;
-
-        // À chaque interaction (clic, toucher), on réveille les contextes suspendus
         function resumeAll() {
           allContexts.forEach(function(ctx) {
             if (ctx && ctx.state === 'suspended') {
@@ -69,7 +143,6 @@
             }
           });
         }
-
         document.addEventListener('click',      resumeAll, true);
         document.addEventListener('touchstart', resumeAll, true);
         document.addEventListener('touchend',   resumeAll, true);
@@ -77,7 +150,79 @@
       })();
     </script>
 
-    <!-- ══ CHARGEMENT VOICEFLOW (inchangé) ══ -->
+    <!-- ══ FIX 3 : WATCHDOG + VISIBILITY + FREEZE DETECTION ══ -->
+    <script>
+      var vfLoaded       = false;
+      var watchdogTimer  = null;
+      var heartbeatTimer = null;
+      var lastHeartbeat  = Date.now();
+      var MAX_LOAD_MS    = 12000;
+      var HEARTBEAT_MS   = 3000;
+      var FREEZE_MS      = 9000;
+
+      function showLoading() {
+        document.getElementById('loading-screen').style.display = 'flex';
+        document.getElementById('error-screen').style.display   = 'none';
+      }
+      function hideLoading() {
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('error-screen').style.display   = 'none';
+      }
+      function showError() {
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('error-screen').style.display   = 'flex';
+      }
+
+      function startWatchdog() {
+        clearTimeout(watchdogTimer);
+        watchdogTimer = setTimeout(function() {
+          if (!vfLoaded) {
+            console.warn('⚠️ Watchdog: Voiceflow timeout');
+            showError();
+          }
+        }, MAX_LOAD_MS);
+      }
+
+      function startHeartbeat() {
+        clearInterval(heartbeatTimer);
+        lastHeartbeat = Date.now();
+        heartbeatTimer = setInterval(function() {
+          var now = Date.now();
+          var gap = now - lastHeartbeat;
+          lastHeartbeat = now;
+          if (gap > FREEZE_MS) {
+            console.warn('⚠️ Heartbeat: freeze détecté (' + gap + 'ms) — reload');
+            safeReload();
+          }
+        }, HEARTBEAT_MS);
+      }
+
+      function safeReload() {
+        clearTimeout(watchdogTimer);
+        clearInterval(heartbeatTimer);
+        vfLoaded = false;
+        showLoading();
+        setTimeout(function() { window.location.reload(); }, 300);
+      }
+
+      function retryLoad() {
+        safeReload();
+      }
+
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+          if (!vfLoaded) {
+            safeReload();
+          }
+        }
+      });
+
+      showLoading();
+      startWatchdog();
+      startHeartbeat();
+    </script>
+
+    <!-- ══ CHARGEMENT VOICEFLOW ══ -->
     <script type="text/javascript">
       const qs = new URLSearchParams(window.location.search);
       const email      = qs.get('email')       || '';
@@ -96,6 +241,12 @@
 
       (function (d, t) {
         const v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+
+        v.onerror = function() {
+          console.error('❌ Échec chargement du script Voiceflow CDN');
+          showError();
+        };
+
         v.onload = function () {
           window.voiceflow.chat.load({
             verify:    { projectID: '68a6e2cc67f49328386b3766' },
@@ -119,10 +270,17 @@
                 payload: payload
               }
             }
-          }).then(() => {
+          }).then(function() {
             console.log("✅ Webchat V3 chargé avec payload:", payload);
+            vfLoaded = true;
+            clearTimeout(watchdogTimer);
+            hideLoading();
+          }).catch(function(err) {
+            console.error("❌ Erreur voiceflow.chat.load:", err);
+            showError();
           });
         };
+
         v.src  = 'https://cdn.voiceflow.com/widget-next/bundle.mjs';
         v.type = 'text/javascript';
         s.parentNode.insertBefore(v, s);
